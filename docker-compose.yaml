@@ -1,0 +1,12 @@
+version: '3.7'
+services:
+    hammerdb:
+        network_mode: host
+        build: 
+          context: .
+          dockerfile: dockerfile
+        env_file:
+          - hammerdb.env
+        volumes:
+          - ./scripts:/opt/HammerDB-4.7/scripts
+        command: ["/opt/HammerDB-4.7/scripts/$${SCRIPT_NAME}"]

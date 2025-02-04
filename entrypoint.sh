@@ -7,7 +7,7 @@ if [ -z "$1" ]; then
   exit 1
 fi
 
-SCRIPT_NAME=$1
+#SCRIPT_NAME=$1
 
 # Check if the script exists
 if [ ! -f "/opt/HammerDB-4.7/scripts/$SCRIPT_NAME" ]; then
