@@ -1,3 +1,26 @@
+
+
+
+docker-compose config
+
+
+docker-compose up
+
+
+docker-compose up --build
+
+
+docker-compose down --rmi local --volumes
+
+
+
+
+
+
+##############################################################################################################
+
+
+
 PASSWORD='S0methingS@Str0ng!'
 
 docker pull mcr.microsoft.com/mssql/rhel/server:2022-latest
