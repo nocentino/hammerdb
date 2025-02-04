@@ -1,6 +1,6 @@
-# Prusk branch for working with Anthony's hammerdb setup
+# Prusk branch
 
-Have change to work with docker-compose
+Have changed to work with docker-compose
 
 .env file needs to created locally containing: -
 
@@ -11,4 +11,4 @@ Have change to work with docker-compose
     SCRIPT_NAME=XXXXXX
 
 Navigate to the folder and execute with: -
-docker-compose up
+    docker-compose up
