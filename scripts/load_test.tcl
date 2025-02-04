@@ -2,6 +2,7 @@
 set username $::env(USERNAME)
 set password $::env(PASSWORD)
 set sql_server_host $::env(SQL_SERVER_HOST)
+set virtual_users $::env(VIRTUAL_USERS)
 set tmpdir /tmp
 
 # Check if all required environment variables are set
@@ -41,7 +42,7 @@ diset tpcc mssqls_allwarehouse true
 
 loadscript
 puts "TEST STARTED"
-vuset vu vcpu
+vuset vu $virtual_users
 vucreate
 tcstart
 tcstatus

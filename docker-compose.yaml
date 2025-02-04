@@ -9,4 +9,5 @@ services:
           - hammerdb.env
         volumes:
           - ./scripts:/opt/HammerDB-4.7/scripts
+          - ./output:/tmp
         command: ["/opt/HammerDB-4.7/scripts/$${SCRIPT_NAME}"]
