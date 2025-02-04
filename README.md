@@ -2,7 +2,7 @@
 
 Have changed to work with docker-compose
 
-.env file needs to created locally containing: -
+<i>hammerdb.env<i> file needs to created locally containing: -
 
     USERNAME=XXXXXX
     PASSWORD=XXXXXX
