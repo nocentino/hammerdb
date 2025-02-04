@@ -11,4 +11,5 @@ Have changed to work with docker-compose
     SCRIPT_NAME=XXXXXX
 
 Navigate to the folder and execute with: -
+
     docker-compose up
