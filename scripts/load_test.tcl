@@ -3,6 +3,7 @@ set username $::env(USERNAME)
 set password $::env(PASSWORD)
 set sql_server_host $::env(SQL_SERVER_HOST)
 set virtual_users $::env(VIRTUAL_USERS)
+set duration $::env(DURATION)
 set tmpdir /tmp
 
 # Check if all required environment variables are set
@@ -35,7 +36,7 @@ diset tpcc mssqls_dbase tpcc
 diset tpcc mssqls_driver timed
 diset tpcc mssqls_total_iterations 10000000
 diset tpcc mssqls_rampup 0
-diset tpcc mssqls_duration 1
+diset tpcc mssqls_duration $duration
 diset tpcc mssqls_checkpoint false
 diset tpcc mssqls_timeprofile true
 diset tpcc mssqls_allwarehouse true

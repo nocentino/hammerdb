@@ -25,10 +25,13 @@ if {$jobid eq ""} {
     exit 1
 }
 
+# Set output as JSON
+jobs format JSON
+
+
 # Write output
 puts "TRANSACTION RESPONSE TIMES"
 puts [job $jobid timing]
-
 
 puts "TRANSACTION COUNT"
 puts [jobs $jobid tcount]
