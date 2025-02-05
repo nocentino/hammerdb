@@ -10,6 +10,9 @@ docker-compose up
 docker-compose up --build
 
 
+docker-compose up --env RUN_MODE="load"
+
+
 docker-compose down --rmi local --volumes
 
 

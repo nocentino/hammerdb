@@ -10,9 +10,8 @@ Have changed to work with docker-compose
     VIRTUAL_USERS=XX
     WAREHOUSES=XX
     DURATION=XX
-    SCRIPT_NAME=XXXXXXXXXXXXX.tcl
 
 
 Navigate to the folder and execute with: -
 
-    docker-compose up
+    docker-compose up --env RUN_MODE="build|load|parse"

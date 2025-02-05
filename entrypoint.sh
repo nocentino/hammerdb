@@ -21,5 +21,26 @@ if [ -z "$USERNAME" ] || [ -z "$PASSWORD" ] || [ -z "$SQL_SERVER_HOST" ]; then
   exit 1
 fi
 
+
+#!/bin/bash
+
+# Check if RUN_MODE is set and not empty
+if [[ -z "$RUN_MODE" ]]; then
+    echo "RUN_MODE is not set. Using default mode."
+    exit 1
+fi
+    
+# Run a SCRIPT_NAME based on RUN_MODE value
+if [[ "$RUN_MODE" == "build" ]]; then
+    SCRIPT_NAME = "build_schema.tcl"
+elif [[ "$RUN_MODE" == "load" ]]; then
+    SCRIPT_NAME = "load_test.tcl"
+elif [[ "$RUN_MODE" == "parse" ]]; then
+    SCRIPT_NAME = "parse_output.tcl"
+else
+    echo "Unknown RUN_MODE: '$RUN_MODE'. Exiting."
+    exit 1
+fi
+
 # Run the specified HammerDB script
 /opt/HammerDB-4.7/hammerdbcli auto /opt/HammerDB-4.7/scripts/$SCRIPT_NAME
