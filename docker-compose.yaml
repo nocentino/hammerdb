@@ -7,6 +7,8 @@ services:
           dockerfile: dockerfile
         env_file:
           - hammerdb.env
+        environment:
+          - RUN_MODE
         volumes:
           - ./scripts:/opt/HammerDB-4.7/scripts
           - ./output:/tmp
