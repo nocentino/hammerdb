@@ -14,4 +14,4 @@ Have changed to work with docker-compose
 
 Navigate to the folder and execute with: -
 
-    docker-compose up --env RUN_MODE="build|load|parse"
+    RUN_MODE=build|load|parse docker-compose up
