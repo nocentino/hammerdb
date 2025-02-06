@@ -4,19 +4,15 @@
 docker-compose config
 
 
-docker-compose up
+#RUN_MODE=build docker-compose up
 
-
-docker-compose up --build
-
+RUN_MODE=load docker-compose up
 
 RUN_MODE=parse docker-compose up
 
+RUN_MODE=parse docker-compose up > ~/results.txt
 
 docker-compose down --rmi local --volumes
-
-
-docker-compose up > ~/results.txt
 
 
 
@@ -48,7 +44,7 @@ docker build -t hammerdb-sqlserver .  --platform=linux/amd64
 # TODO: Fix - Dictionary "connection" for MSSQLServer exists but key "mssqls_user" doesn't, key "mssqls_user" cannot be found in any MSSQLServer dictionary
 docker run --rm \
     --env 'USERNAME=sa' \
-    --env 'PASSWORD=Allington1122' \
+    --env 'PASSWORD=Testing1122' \
     --env 'SQL_SERVER_HOST=z-ap-docker-01' \
     --network="host" \
     --platform=linux/amd64 \
@@ -59,7 +55,7 @@ docker run --rm \
 # TODO: Fix - Dictionary "connection" for MSSQLServer exists but key "mssqls_user" doesn't, key "mssqls_user" cannot be found in any MSSQLServer dictionary
 docker run --rm \
     --env 'USERNAME=sa' \
-    --env 'PASSWORD=Allington1122' \
+    --env 'PASSWORD=Testing1122' \
     --env 'SQL_SERVER_HOST=z-ap-sql-01' \
     --network="host" \
     --volume ./output:/tmp \
@@ -70,7 +66,7 @@ docker run --rm \
 # Start a container to process the results from the load test
 docker run --rm \
     --env 'USERNAME=sa' \
-    --env 'PASSWORD=Allington1122' \
+    --env 'PASSWORD=Testing1122' \
     --env 'SQL_SERVER_HOST=z-ap-sql-01' \
     --network="host" \
     --volume ./output:/tmp \
