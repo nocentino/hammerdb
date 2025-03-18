@@ -4,17 +4,19 @@
 docker-compose config
 
 
-#RUN_MODE=build docker-compose up
+RUN_MODE=build docker-compose up
 
-RUN_MODE=load docker-compose up
+RUN_MODE=load docker-compose up 
 
 RUN_MODE=parse docker-compose up
 
-RUN_MODE=parse docker-compose up > ~/results.txt
+docker-compose down
+
+#RUN_MODE=parse docker-compose up > ~/result_Z-AP-LINUX-01.txt
 
 docker-compose down --rmi local --volumes
 
-
+sudo rm -rf output
 
 ##############################################################################################################
 

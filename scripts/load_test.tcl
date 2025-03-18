@@ -3,7 +3,9 @@ set username $::env(USERNAME)
 set password $::env(PASSWORD)
 set sql_server_host $::env(SQL_SERVER_HOST)
 set virtual_users $::env(VIRTUAL_USERS)
+set rampup $::env(RAMPUP)
 set duration $::env(DURATION)
+set total_iterations $::env(TOTAL_ITERATIONS)
 set tmpdir /tmp
 
 # Check if all required environment variables are set
@@ -34,8 +36,8 @@ diset connection mssqls_authentication sql
 
 diset tpcc mssqls_dbase tpcc
 diset tpcc mssqls_driver timed
-diset tpcc mssqls_total_iterations 10000000
-diset tpcc mssqls_rampup 0
+diset tpcc mssqls_total_iterations $total_iterations
+diset tpcc mssqls_rampup $rampup
 diset tpcc mssqls_duration $duration
 diset tpcc mssqls_checkpoint false
 diset tpcc mssqls_timeprofile true
