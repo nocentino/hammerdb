@@ -1,3 +1,27 @@
+
+
+
+docker-compose config
+
+
+RUN_MODE=build docker-compose up
+
+RUN_MODE=load docker-compose up 
+
+RUN_MODE=parse docker-compose up
+
+docker-compose down
+
+#RUN_MODE=parse docker-compose up > ~/result_Z-AP-LINUX-01.txt
+
+docker-compose down --rmi local --volumes
+
+sudo rm -rf output
+
+##############################################################################################################
+
+
+
 PASSWORD='S0methingS@Str0ng!'
 
 docker pull mcr.microsoft.com/mssql/rhel/server:2022-latest
@@ -22,8 +46,8 @@ docker build -t hammerdb-sqlserver .  --platform=linux/amd64
 # TODO: Fix - Dictionary "connection" for MSSQLServer exists but key "mssqls_user" doesn't, key "mssqls_user" cannot be found in any MSSQLServer dictionary
 docker run --rm \
     --env 'USERNAME=sa' \
-    --env 'PASSWORD=S0methingS@Str0ng!' \
-    --env 'SQL_SERVER_HOST=localhost' \
+    --env 'PASSWORD=Testing1122' \
+    --env 'SQL_SERVER_HOST=z-ap-docker-01' \
     --network="host" \
     --platform=linux/amd64 \
     hammerdb-sqlserver build_schema.tcl
@@ -33,8 +57,8 @@ docker run --rm \
 # TODO: Fix - Dictionary "connection" for MSSQLServer exists but key "mssqls_user" doesn't, key "mssqls_user" cannot be found in any MSSQLServer dictionary
 docker run --rm \
     --env 'USERNAME=sa' \
-    --env 'PASSWORD=S0methingS@Str0ng!' \
-    --env 'SQL_SERVER_HOST=localhost' \
+    --env 'PASSWORD=Testing1122' \
+    --env 'SQL_SERVER_HOST=z-ap-sql-01' \
     --network="host" \
     --volume ./output:/tmp \
     --platform=linux/amd64 \
@@ -44,8 +68,8 @@ docker run --rm \
 # Start a container to process the results from the load test
 docker run --rm \
     --env 'USERNAME=sa' \
-    --env 'PASSWORD=S0methingS@Str0ng!' \
-    --env 'SQL_SERVER_HOST=localhost' \
+    --env 'PASSWORD=Testing1122' \
+    --env 'SQL_SERVER_HOST=z-ap-sql-01' \
     --network="host" \
     --volume ./output:/tmp \
     --platform=linux/amd64 \

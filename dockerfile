@@ -29,7 +29,7 @@ RUN chmod +x ./hammerdbcli
 
 
 # Add a script to automate SQL Server TPC-C test
-COPY ./scripts /opt/HammerDB-4.7/scripts
+#COPY ./scripts /opt/HammerDB-4.7/scripts
 
 
 # Add the entrypoint script

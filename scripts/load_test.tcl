@@ -2,6 +2,10 @@
 set username $::env(USERNAME)
 set password $::env(PASSWORD)
 set sql_server_host $::env(SQL_SERVER_HOST)
+set virtual_users $::env(VIRTUAL_USERS)
+set rampup $::env(RAMPUP)
+set duration $::env(DURATION)
+set total_iterations $::env(TOTAL_ITERATIONS)
 set tmpdir /tmp
 
 # Check if all required environment variables are set
@@ -23,6 +27,7 @@ dbset bm TPC-C
 
 # Set up the database connection details for MSSQL
 diset connection mssqls_server $sql_server_host
+diset connection mssqls_linux_server $sql_server_host
 diset connection mssqls_user $username
 diset connection mssqls_pass $password
 diset connection mssqls_tcp true
@@ -31,16 +36,16 @@ diset connection mssqls_authentication sql
 
 diset tpcc mssqls_dbase tpcc
 diset tpcc mssqls_driver timed
-diset tpcc mssqls_total_iterations 10000000
-diset tpcc mssqls_rampup 0
-diset tpcc mssqls_duration 1
+diset tpcc mssqls_total_iterations $total_iterations
+diset tpcc mssqls_rampup $rampup
+diset tpcc mssqls_duration $duration
 diset tpcc mssqls_checkpoint false
 diset tpcc mssqls_timeprofile true
 diset tpcc mssqls_allwarehouse true
 
 loadscript
 puts "TEST STARTED"
-vuset vu vcpu
+vuset vu $virtual_users
 vucreate
 tcstart
 tcstatus
