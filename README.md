@@ -1,17 +1,30 @@
-# Prusk branch
+# HammerDB in Docker Compose
 
-Have changed to work with docker-compose
+This repository allows for standarised HammerDB testing against a SQL Server instance, settings controlled through an environment file.
 
-<i>hammerdb.env</i> file needs to created locally containing: -
+Pull down the repository to a linux server running Docker: -
 
-    USERNAME=XX
-    PASSWORD=XXXXXXXXXXXXX
-    SQL_SERVER_HOST=XXXXXXXXXXXXX
-    VIRTUAL_USERS=XX
-    WAREHOUSES=XX
-    DURATION=XX
+    git clone https://github.com/nocentino/hammerdb.git
 
+Navigate to the directory and create a <i>hammerdb.env</i> file containing the following: -: -
 
-Navigate to the folder and execute with: -
+    USERNAME=sa
+    PASSWORD=XXXXXXXXXXX
+    SQL_SERVER_HOST=XXXXXXXXXXX
+    VIRTUAL_USERS=10
+    WAREHOUSES=20
+    RAMPUP=0
+    DURATION=1
+    TOTAL_ITERATIONS=10000000
 
-    RUN_MODE=build|load|parse docker-compose up
+To build the tpcc database run: -
+
+    RUN_MODE=build docker-compose up
+
+To execute performance tests: -
+
+    RUN_MODE=load docker-compose up 
+
+To parse results of the performance test: -
+
+    RUN_MODE=parse docker-compose up
