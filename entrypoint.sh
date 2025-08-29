@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # Ensure all required environment variables are set
-if [ -z "$USERNAME" ] || [ -z "$PASSWORD" ] || [ -z "$SQL_SERVER_HOST" ]; then
-  echo "Error: Environment variables USERNAME, PASSWORD, and SQL_SERVER_HOST must be set."
+if [ -z "$USERNAME" ] || [ -z "$PASSWORD" ] || [ -z "$SQL_SERVER_HOST" ] || [ -z "$BENCHMARK" ]; then
+  echo "Error: Environment variables USERNAME, PASSWORD, BENCHMARK and SQL_SERVER_HOST must be set."
   exit 1
 fi
 
@@ -11,16 +11,42 @@ if [[ -z "$RUN_MODE" ]]; then
     echo "Error: RUN_MODE is not set."
     exit 1
 fi
-    
-# Run a SCRIPT_NAME based on RUN_MODE value
-if [[ "$RUN_MODE" == "build" ]]; then
-    SCRIPT_NAME="build_schema.tcl"
-elif [[ "$RUN_MODE" == "load" ]]; then
-    SCRIPT_NAME="load_test.tcl"
-elif [[ "$RUN_MODE" == "parse" ]]; then
-    SCRIPT_NAME="parse_output.tcl"
+
+# Set SCRIPT_NAME based on both BENCHMARK and RUN_MODE
+if [[ "$BENCHMARK" == "tprocc" ]]; then
+    case "$RUN_MODE" in
+        build)
+            SCRIPT_NAME="build_schema_tprocc.tcl"
+            ;;
+        load)
+            SCRIPT_NAME="load_test_tprocc.tcl"
+            ;;
+        parse)
+            SCRIPT_NAME="parse_output.tcl"
+            ;;
+        *)
+            echo "Unknown RUN_MODE: '$RUN_MODE' for benchmark '$BENCHMARK'. Exiting."
+            exit 1
+            ;;
+    esac
+elif [[ "$BENCHMARK" == "tproch" ]]; then
+    case "$RUN_MODE" in
+        build)
+            SCRIPT_NAME="build_schema_tproch.tcl"
+            ;;
+        load)
+            SCRIPT_NAME="load_test_tproch.tcl"
+            ;;
+        parse)
+            SCRIPT_NAME="parse_output_tproch.tcl"
+            ;;
+        *)
+            echo "Unknown RUN_MODE: '$RUN_MODE' for benchmark '$BENCHMARK'. Exiting."
+            exit 1
+            ;;
+    esac
 else
-    echo "Unknown RUN_MODE: '$RUN_MODE'. Exiting."
+    echo "Unknown BENCHMARK: '$BENCHMARK'. Supported benchmarks: tprocc, tproch. Exiting."
     exit 1
 fi
 

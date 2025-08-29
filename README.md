@@ -17,14 +17,14 @@ Navigate to the directory and create a <i>hammerdb.env</i> file containing the f
     DURATION=1
     TOTAL_ITERATIONS=10000000
 
-To build the tpcc database run: -
+To build the tprocc database run: -
 
-    RUN_MODE=build docker-compose up
+    RUN_MODE=build BENCHMARK=tprocc docker-compose up
 
 To execute performance tests: -
 
-    RUN_MODE=load docker-compose up 
+    RUN_MODE=load BENCHMARK=tprocc docker-compose up 
 
 To parse results of the performance test: -
 
-    RUN_MODE=parse docker-compose up
+    RUN_MODE=parse BENCHMARK=tprocc docker-compose up

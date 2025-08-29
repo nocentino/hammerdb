@@ -1,14 +1,20 @@
 
 
 
-docker-compose config
+docker compose config
 
 
-RUN_MODE=build docker-compose up
+RUN_MODE=build BENCHMARK=tprocc docker compose up
 
-RUN_MODE=load docker-compose up 
+RUN_MODE=load BENCHMARK=tprocc docker compose up
 
-RUN_MODE=parse docker-compose up
+RUN_MODE=parse BENCHMARK=tprocc docker compose up
+
+RUN_MODE=build BENCHMARK=tproch docker compose up
+
+RUN_MODE=load BENCHMARK=tproch docker compose up
+
+RUN_MODE=parse BENCHMARK=tproch docker compose up
 
 docker-compose down
 
