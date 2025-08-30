@@ -1,84 +1,135 @@
+#!/bin/bash
+#
+# HammerDB Load Testing Script
+# ============================
+# 
+# This script automates the setup and execution of HammerDB load tests for:
+# - TPC-C (Transaction Processing Performance Council Benchmark C)
+# - TPC-H (Transaction Processing Performance Council Benchmark H)
+#
+# Prerequisites:
+# - Docker and Docker Compose installed
+# - SQL Server containers running on ports 4000 (2022) and 4001 (2025)
+# - Properly configured hammerdb.env file
+#
+# Usage:
+#   ./loadtest.sh
+#
 
+# ============================
+# SQL SERVER CONTAINER SETUP
+# ============================
 
+echo "Pulling SQL Server Docker images..."
+docker pull mcr.microsoft.com/mssql/server:2025-RC0-ubuntu-24.04
+docker pull mcr.microsoft.com/mssql/server:2022-latest
 
-docker compose config
-
-
-RUN_MODE=build BENCHMARK=tprocc docker compose up
-
-RUN_MODE=load BENCHMARK=tprocc docker compose up
-
-RUN_MODE=parse BENCHMARK=tprocc docker compose up
-
-RUN_MODE=build BENCHMARK=tproch docker compose up
-
-RUN_MODE=load BENCHMARK=tproch docker compose up
-
-RUN_MODE=parse BENCHMARK=tproch docker compose up
-
-docker-compose down
-
-#RUN_MODE=parse docker-compose up > ~/result_Z-AP-LINUX-01.txt
-
-docker-compose down --rmi local --volumes
-
-sudo rm -rf output
-
-##############################################################################################################
-
-
-
-PASSWORD='S0methingS@Str0ng!'
-
-docker pull mcr.microsoft.com/mssql/rhel/server:2022-latest
-
-#Run a container
+echo "Starting SQL Server 2022 container on port 4000..."
 docker run \
     --env 'ACCEPT_EULA=Y' \
     --env 'MSSQL_SA_PASSWORD=S0methingS@Str0ng!' \
-    --name 'sql1' \
-    --volume sqldata1:/var/opt/mssql \
-    --volume sqlbackups1:/var/opt/mssql/backups \
-    --publish 1433:1433 \
+    --name 'sql_2022' \
+    --volume sqldata_2022:/var/opt/mssql \
+    --volume sqlbackups:/var/opt/mssql/backups \
+    --publish 4000:1433 \
     --platform=linux/amd64 \
     --detach mcr.microsoft.com/mssql/server:2022-latest
-    
-# Build our hammerdb container
-# TODO: Move scripts from a COPY into the container to a volume or better way.
-docker build -t hammerdb-sqlserver .  --platform=linux/amd64
 
-
-# Create the database schema, number of warehouses is 5 * number of cores. Default on this system is 8 cores.
-# TODO: Fix - Dictionary "connection" for MSSQLServer exists but key "mssqls_user" doesn't, key "mssqls_user" cannot be found in any MSSQLServer dictionary
-docker run --rm \
-    --env 'USERNAME=sa' \
-    --env 'PASSWORD=Testing1122' \
-    --env 'SQL_SERVER_HOST=z-ap-docker-01' \
-    --network="host" \
+echo "Starting SQL Server 2025 RC container on port 4001..."
+docker run \
+    --env 'ACCEPT_EULA=Y' \
+    --env 'MSSQL_SA_PASSWORD=S0methingS@Str0ng!' \
+    --name 'sql_2025' \
+    --volume sqldata_2025:/var/opt/mssql \
+    --volume sqlbackups:/var/opt/mssql/backups \
+    --publish 4001:1433 \
     --platform=linux/amd64 \
-    hammerdb-sqlserver build_schema.tcl
+    --detach mcr.microsoft.com/mssql/server:2025-RC0-ubuntu-24.04
+
+echo "Waiting for SQL Server containers to start up..."
+sleep 30
+
+# ============================
+# HAMMERDB TEST EXECUTION
+# ============================
+
+echo "Validating Docker Compose configuration..."
+docker-compose config
+
+echo ""
+echo "=== TPC-C BENCHMARK TESTS ==="
+echo "TPC-C simulates an OLTP environment with complex transactions"
+echo ""
+
+echo "Step 1: Building TPC-C schema..."
+RUN_MODE=build BENCHMARK=tprocc docker-compose up
+
+echo "Step 2: Running TPC-C load test..."
+RUN_MODE=load BENCHMARK=tprocc docker-compose up
+
+echo "Step 3: Parsing TPC-C test results..."
+RUN_MODE=parse BENCHMARK=tprocc docker-compose up
+
+echo ""
+echo "=== TPC-H BENCHMARK TESTS ==="
+echo "TPC-H simulates an OLAP environment with analytical queries"
+echo ""
+
+echo "Step 1: Building TPC-H schema..."
+RUN_MODE=build BENCHMARK=tproch docker-compose up
+
+echo "Step 2: Running TPC-H load test..."
+RUN_MODE=load BENCHMARK=tproch docker-compose up
+
+echo "Step 3: Parsing TPC-H test results..."
+RUN_MODE=parse BENCHMARK=tproch docker-compose up
+
+# ============================
+# CLEANUP OPERATIONS
+# ============================
+
+echo ""
+echo "=== CLEANUP ==="
+echo ""
+
+echo "Stopping HammerDB containers..."
+docker-compose down
+
+echo "Removing HammerDB containers and images (optional - uncomment to enable)..."
+# docker-compose down --rmi local --volumes
+
+echo "Cleaning up output directory (optional - uncomment to enable)..."
+# sudo rm -rf output
 
 
-# Run the load test and output the results to a directory called output mapped to /tmp inside the container
-# TODO: Fix - Dictionary "connection" for MSSQLServer exists but key "mssqls_user" doesn't, key "mssqls_user" cannot be found in any MSSQLServer dictionary
-docker run --rm \
-    --env 'USERNAME=sa' \
-    --env 'PASSWORD=Testing1122' \
-    --env 'SQL_SERVER_HOST=z-ap-sql-01' \
-    --network="host" \
-    --volume ./output:/tmp \
-    --platform=linux/amd64 \
-    hammerdb-sqlserver load_test.tcl
 
+# ============================
+# CONFIGURATION NOTES
+# ============================
+#
+# Environment Variables (configured in hammerdb.env):
+#
+# Database Connection:
+# - USERNAME: SQL Server login username (default: sa)
+# - PASSWORD: SQL Server login password
+# - SQL_SERVER_HOST: SQL Server host and port (default: localhost,4001)
+#
+# TPC-C Configuration:
+# - TPCC_DATABASE_NAME: Target database name for TPC-C tests
+# - VIRTUAL_USERS: Number of virtual users for TPC-C
+# - WAREHOUSES: Number of warehouses in TPC-C schema
+# - RAMPUP: Ramp-up time in minutes
+# - DURATION: Test duration in minutes
+# - TOTAL_ITERATIONS: Maximum number of transactions
+#
+# TPC-H Configuration:
+# - TPROC_H_DATABASE_NAME: Target database name for TPC-H tests
+# - TPROC_H_SCALE_FACTOR: Dataset size multiplier (1 = 1GB)
+# - TPROC_H_DRIVER: Database driver (mssqls for SQL Server)
+# - TPROC_H_BUILD_THREADS: Threads for schema building
+# - TPROC_H_USE_CLUSTERED_COLUMNSTORE: Enable columnstore indexes
+# - TPROC_H_VIRTUAL_USERS: Virtual users for TPC-H queries
+# - TPROC_H_MINUTES: TPC-H test duration in minutes
+#
+##############################################################################################################
 
-# Start a container to process the results from the load test
-docker run --rm \
-    --env 'USERNAME=sa' \
-    --env 'PASSWORD=Testing1122' \
-    --env 'SQL_SERVER_HOST=z-ap-sql-01' \
-    --network="host" \
-    --volume ./output:/tmp \
-    --platform=linux/amd64 \
-    hammerdb-sqlserver generic_tprocc_result.tcl
-
-# start up the container adding in a volume to an output directory 

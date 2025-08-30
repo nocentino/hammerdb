@@ -2,6 +2,8 @@
 set username $::env(USERNAME)
 set password $::env(PASSWORD)
 set sql_server_host $::env(SQL_SERVER_HOST)
+set tproc_h_database_name $::env(TPROC_H_DATABASE_NAME)
+set mssqls_maxdop $::env(MSSQLS_MAXDOP)
 
 # Load environment variables with defaults
 if {[info exists ::env(TPROC_H_VIRTUAL_USERS)]} {
@@ -36,8 +38,10 @@ diset connection mssqls_tcp true
 diset connection mssqls_authentication sql
 
 # Configure TPROC-H Virtual Users
+diset tpch mssqls_dbase $tproc_h_database_name
 diset tpch mssqls_total_querysets 1
 diset tpch mssqls_degree_of_parallel 1
+diset tpch mssqls_maxdop $mssqls_maxdop
 
 # Test run parameters
 set vuser_count $tproc_h_virtual_users

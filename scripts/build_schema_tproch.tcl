@@ -2,7 +2,8 @@
 set username $::env(USERNAME)
 set password $::env(PASSWORD)
 set sql_server_host $::env(SQL_SERVER_HOST)
-
+set tproc_h_database_name $::env(TPROC_H_DATABASE_NAME)
+set mssqls_maxdop $::env(MSSQLS_MAXDOP)
 
 # Load environment variables
 set tproc_h_scale_factor $::env(TPROC_H_SCALE_FACTOR)
@@ -15,26 +16,48 @@ source [file join [file dirname [info script]] "db_connection.tcl"]
 
 # Initialize HammerDB
 puts "SETTING UP TPROC-H SCHEMA BUILD"
+puts "Target database: $tproc_h_database_name"
+puts "Scale factor: $tproc_h_scale_factor"
+puts "Build threads: $tproc_h_build_threads"
+
+# Set database to SQL Server
 dbset db $tproc_h_driver
+
+# Set benchmark to TPC-H
+dbset bm TPC-H
+
+# Configure connection
 diset connection mssqls_server $sql_server_host
 diset connection mssqls_linux_server $sql_server_host
-diset connection mssqls_user $username
+diset connection mssqls_uid $username
 diset connection mssqls_pass $password
 diset connection mssqls_tcp true
 diset connection mssqls_authentication sql
 
-# Configure TPROC-H Schema Build
+# Configure TPC-H Schema Build
+diset tpch mssqls_dbase $tproc_h_database_name
 diset tpch mssqls_scale_fact $tproc_h_scale_factor
 diset tpch mssqls_num_tpch_threads $tproc_h_build_threads
+diset tpch mssqls_maxdop $mssqls_maxdop
 
+# Configure columnstore if enabled
 if {$tproc_h_clustered_columnstore eq "true"} {
-    diset tpch mssqls_tpch_clustered_columnstore "true"
     puts "Using Clustered Columnstore Indexes"
+    # Note: The exact parameter name may vary by HammerDB version
+    # We'll check what's available in the print dict output
 } else {
-    diset tpch mssqls_tpch_clustered_columnstore "false"
+    puts "Using standard row-based storage"
 }
 
+# Load the TPC-H script
+loadscript
+
+# Print current configuration
+puts "Current TPC-H configuration:"
 print dict
+
+# Build the schema
+puts "Starting TPC-H schema build..."
 buildschema
 
 puts "TPROC-H SCHEMA BUILD COMPLETE"

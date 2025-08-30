@@ -2,6 +2,8 @@
 set username $::env(USERNAME)
 set password $::env(PASSWORD)
 set sql_server_host $::env(SQL_SERVER_HOST)
+set tpcc_database_name $::env(TPCC_DATABASE_NAME)
+set mssqls_maxdop $::env(MSSQLS_MAXDOP)
 set virtual_users $::env(VIRTUAL_USERS)
 set rampup $::env(RAMPUP)
 set duration $::env(DURATION)
@@ -34,11 +36,12 @@ diset connection mssqls_tcp true
 diset connection mssqls_authentication sql
 
 
-diset tpcc mssqls_dbase tpcc
+diset tpcc mssqls_dbase $tpcc_database_name
 diset tpcc mssqls_driver timed
 diset tpcc mssqls_total_iterations $total_iterations
 diset tpcc mssqls_rampup $rampup
 diset tpcc mssqls_duration $duration
+diset tpcc mssqls_maxdop $mssqls_maxdop
 diset tpcc mssqls_checkpoint false
 diset tpcc mssqls_timeprofile true
 diset tpcc mssqls_allwarehouse true

@@ -2,6 +2,8 @@
 set username $::env(USERNAME)
 set password $::env(PASSWORD)
 set sql_server_host $::env(SQL_SERVER_HOST)
+set tpcc_database_name $::env(TPCC_DATABASE_NAME)
+set mssqls_maxdop $::env(MSSQLS_MAXDOP)
 
 
 # Check if all required environment variables are set
@@ -48,11 +50,12 @@ if {![info exists ::env(VIRTUAL_USERS)] || [string equal $::env(VIRTUAL_USERS) "
 
 
 # Set the TPC-C configuration (modify parameters as needed)
-diset tpcc mssqls_dbase tpcc
+diset tpcc mssqls_dbase $tpcc_database_name
 #diset tpcc mssqls_count_ware $warehouse
 #diset tpcc mssqls_num_vu $vu
 diset tpcc mssqls_count_ware $warehouse
 diset tpcc mssqls_num_vu $vu
+diset tpcc mssqls_maxdop $mssqls_maxdop
 
 
 # Load the TPC-C script and run the benchmark

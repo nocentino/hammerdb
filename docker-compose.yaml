@@ -1,9 +1,12 @@
 services:
     hammerdb:
         network_mode: host
+        platform: linux/amd64
         build: 
           context: .
           dockerfile: dockerfile
+          platforms:
+            - linux/amd64
         env_file:
           - hammerdb.env
         environment:
