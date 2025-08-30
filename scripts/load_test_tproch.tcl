@@ -41,7 +41,6 @@ diset connection mssqls_authentication sql
 diset tpch mssqls_tpch_dbase $tproc_h_database_name
 diset tpch mssqls_total_querysets 1
 diset tpch mssqls_degree_of_parallel 1
-diset tpch mssqls_tpch_maxdop $mssqls_maxdop
 
 # Test run parameters
 set vuser_count $tproc_h_virtual_users

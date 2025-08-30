@@ -46,7 +46,6 @@ diset connection mssqls_authentication sql
 diset tpch mssqls_tpch_dbase $tproc_h_database_name
 diset tpch mssqls_scale_fact $tproc_h_scale_factor
 diset tpch mssqls_num_tpch_threads $tproc_h_build_threads
-diset tpch mssqls_tpch_maxdop $mssqls_maxdop
 
 # Configure columnstore if enabled
 if {$tproc_h_clustered_columnstore eq "true"} {
