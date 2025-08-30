@@ -59,13 +59,9 @@ vuset vu $vuser_count
 vucreate
 vurun
 
-# Wait for virtual users to finish
-set curr_vuser 1
-while {$curr_vuser <= $vuser_count} {
-    puts "Waiting for virtual user $curr_vuser"
-    vudestroy $curr_vuser
-    incr curr_vuser
-}
+# Wait for the test to complete
+puts "Waiting for test completion..."
+vwait forever
 
 puts "TPROC-H LOAD TEST COMPLETE"
 puts "Results available in /tmp/mssqls_tproch"

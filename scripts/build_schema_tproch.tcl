@@ -11,6 +11,14 @@ set tproc_h_driver $::env(TPROC_H_DRIVER)
 set tproc_h_build_threads $::env(TPROC_H_BUILD_THREADS)
 set tproc_h_clustered_columnstore $::env(TPROC_H_USE_CLUSTERED_COLUMNSTORE)
 
+# Validate required environment variables
+foreach var {USERNAME PASSWORD SQL_SERVER_HOST TPROC_H_DATABASE_NAME TPROC_H_SCALE_FACTOR TPROC_H_DRIVER TPROC_H_BUILD_THREADS MSSQLS_MAXDOP} {
+    if {![info exists ::env($var)] || $::env($var) eq ""} {
+        puts "Error: Environment variable $var is not set or empty"
+        exit 1
+    }
+}
+
 # Database connection parameters
 source [file join [file dirname [info script]] "db_connection.tcl"]
 
