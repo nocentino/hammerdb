@@ -1,4 +1,5 @@
 #!/bin/tclsh
+# Fetch environment variables for SQL Server connection
 set username $::env(USERNAME)
 set password $::env(PASSWORD)
 set sql_server_host $::env(SQL_SERVER_HOST)
@@ -22,13 +23,25 @@ if {[info exists ::env(TPROC_H_DRIVER)]} {
 } else {
     set tproc_h_driver "mssqls"
 }
+set tmpdir /tmp
 
 # Database connection parameters
 source [file join [file dirname [info script]] "db_connection.tcl"]
 
 # Initialize HammerDB
-puts "SETTING UP TPROC-H LOAD TEST"
+puts "SETTING UP TPC-H LOAD TEST"
+puts "Environment variables loaded:"
+puts "  Database: $tproc_h_database_name"
+puts "  Virtual Users: $tproc_h_virtual_users"
+puts "  Duration: $tproc_h_minutes minutes"
+puts "  Driver: $tproc_h_driver"
+
+# Set up the database connection details for MSSQL
 dbset db $tproc_h_driver
+
+# Set the benchmark to TPC-H
+dbset bm TPC-H
+# Set up the database connection details for MSSQL
 diset connection mssqls_server $sql_server_host
 diset connection mssqls_linux_server $sql_server_host
 diset connection mssqls_uid $username
@@ -36,20 +49,19 @@ diset connection mssqls_pass $password
 diset connection mssqls_tcp true
 diset connection mssqls_authentication sql
 
-# Configure TPROC-H Virtual Users
+# Configure TPC-H benchmark parameters
 diset tpch mssqls_tpch_dbase $tproc_h_database_name
 diset tpch mssqls_total_querysets 1
 
 # Test run parameters
 set vuser_count $tproc_h_virtual_users
 set test_duration $tproc_h_minutes
-set tmpdir /tmp
 
-# Configure test options
+# Configure test options and load scripts
 vuset logtotemp 1
 loadscript
 
-puts "STARTING TPROC-H VIRTUAL USERS"
+puts "STARTING TPC-H VIRTUAL USERS"
 puts "Virtual Users: $vuser_count"
 puts "Duration: $test_duration minutes"
 puts "Output will be logged to: $tmpdir/mssqls_tproch"
@@ -57,13 +69,18 @@ puts "Output will be logged to: $tmpdir/mssqls_tproch"
 vuset vu $vuser_count
 vucreate
 puts "TEST STARTED"
+puts "About to run vurun command..."
 set jobid [ vurun ]
+puts "vurun completed with job ID: $jobid"
 puts "Waiting for test completion..."
 vucomplete
+puts "Test completion confirmed"
 vudestroy
-puts "TPROC-H LOAD TEST COMPLETE"
+puts "Virtual users destroyed"
+puts "TPC-H LOAD TEST COMPLETE"
 
 # Write job ID to output file for parsing
+puts "Creating output file at: $tmpdir/mssqls_tproch"
 set of [ open $tmpdir/mssqls_tproch w ]
 puts $of $jobid
 close $of

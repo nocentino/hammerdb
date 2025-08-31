@@ -1,3 +1,4 @@
+#!/bin/tclsh
 # Fetch environment variables for SQL Server connection
 set username $::env(USERNAME)
 set password $::env(PASSWORD)
@@ -16,13 +17,18 @@ if {![info exists username] || ![info exists password] || ![info exists sql_serv
     exit
 }
 
-# Log the connection details (excluding password for security)
-puts "Connecting to SQL Server instance at $sql_server_host with username $username and password"
-
+# Initialize HammerDB
+puts "SETTING UP TPC-C LOAD TEST"
+puts "Environment variables loaded:"
+puts "  Database: $tpcc_database_name"
+puts "  Virtual Users: $virtual_users"
+puts "  Duration: $duration minutes"
+puts "  Rampup: $rampup minutes"
+puts "  Total Iterations: $total_iterations"
+puts "  MAXDOP: $mssqls_maxdop"
 
 # Set up the database connection details for MSSQL
 dbset db mssqls
-
 
 # Set the benchmark to TPC-C
 dbset bm TPC-C
@@ -35,7 +41,7 @@ diset connection mssqls_pass $password
 diset connection mssqls_tcp true
 diset connection mssqls_authentication sql
 
-
+# Configure TPC-C benchmark parameters
 diset tpcc mssqls_dbase $tpcc_database_name
 diset tpcc mssqls_driver timed
 diset tpcc mssqls_total_iterations $total_iterations
@@ -46,16 +52,32 @@ diset tpcc mssqls_checkpoint false
 diset tpcc mssqls_timeprofile true
 diset tpcc mssqls_allwarehouse true
 
+# Configure test options and load scripts
 loadscript
-puts "TEST STARTED"
+
+puts "STARTING TPC-C VIRTUAL USERS"
+puts "Virtual Users: $virtual_users"
+puts "Duration: $duration minutes"
+puts "Output will be logged to: $tmpdir/mssqls_tprocc"
+
 vuset vu $virtual_users
 vucreate
+puts "TEST STARTED"
+puts "Starting transaction counter..."
 tcstart
 tcstatus
+puts "About to run vurun command..."
 set jobid [ vurun ]
+puts "vurun completed with job ID: $jobid"
 vudestroy
+puts "Stopping transaction counter..."
 tcstop
-puts "TEST COMPLETE"
+puts "Virtual users destroyed"
+puts "TPC-C LOAD TEST COMPLETE"
+
+# Write job ID to output file for parsing
+puts "Creating output file at: $tmpdir/mssqls_tprocc"
 set of [ open $tmpdir/mssqls_tprocc w ]
 puts $of $jobid
 close $of
+puts "Job ID $jobid written to $tmpdir/mssqls_tprocc"
