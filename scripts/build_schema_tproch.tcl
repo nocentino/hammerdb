@@ -3,7 +3,6 @@ set username $::env(USERNAME)
 set password $::env(PASSWORD)
 set sql_server_host $::env(SQL_SERVER_HOST)
 set tproc_h_database_name $::env(TPROC_H_DATABASE_NAME)
-set mssqls_maxdop $::env(MSSQLS_MAXDOP)
 
 # Load environment variables
 set tproc_h_scale_factor $::env(TPROC_H_SCALE_FACTOR)
@@ -12,7 +11,7 @@ set tproc_h_build_threads $::env(TPROC_H_BUILD_THREADS)
 set tproc_h_clustered_columnstore $::env(TPROC_H_USE_CLUSTERED_COLUMNSTORE)
 
 # Validate required environment variables
-foreach var {USERNAME PASSWORD SQL_SERVER_HOST TPROC_H_DATABASE_NAME TPROC_H_SCALE_FACTOR TPROC_H_DRIVER TPROC_H_BUILD_THREADS MSSQLS_MAXDOP} {
+foreach var {USERNAME PASSWORD SQL_SERVER_HOST TPROC_H_DATABASE_NAME TPROC_H_SCALE_FACTOR TPROC_H_DRIVER TPROC_H_BUILD_THREADS} {
     if {![info exists ::env($var)] || $::env($var) eq ""} {
         puts "Error: Environment variable $var is not set or empty"
         exit 1
