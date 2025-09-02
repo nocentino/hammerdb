@@ -48,11 +48,11 @@ diset tpch mssqls_num_tpch_threads $tproc_h_build_threads
 
 # Configure columnstore if enabled
 if {$tproc_h_clustered_columnstore eq "true"} {
-    puts "Using Clustered Columnstore Indexes"
-    # Note: The exact parameter name may vary by HammerDB version
-    # We'll check what's available in the print dict output
+    puts "Enabling Clustered Columnstore Indexes"
+    diset tpch mssqls_colstore true
 } else {
     puts "Using standard row-based storage"
+    diset tpch mssqls_colstore false
 }
 
 # Load the TPC-H script

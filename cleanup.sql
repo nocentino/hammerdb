@@ -7,3 +7,18 @@ GO
 ALTER DATABASE tpch SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
 DROP DATABASE tpch;
 GO
+
+ALTER DATABASE MODEL SET RECOVERY SIMPLE
+
+select name, recovery_model_desc from sys.databases where name in ('tpcc', 'tpch', 'model');
+
+BACKUP DATABASE tpcc TO DISK = 'tpcc.bak' 
+WITH INIT, SKIP, NOREWIND, NOUNLOAD, STATS = 10, COMPRESSION;
+
+BACKUP DATABASE tpch TO DISK = 'tpch.bak' 
+WITH INIT, SKIP, NOREWIND, NOUNLOAD, STATS = 10, COMPRESSION;
+
+RESTORE DATABASE tpch FROM DISK = 'tpch.bak' WITH REPLACE;
+RESTORE DATABASE tpcc FROM DISK = 'tpcc.bak' WITH REPLACE;
+
+sp_readerrorlog;
