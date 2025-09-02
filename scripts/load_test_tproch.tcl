@@ -12,12 +12,6 @@ if {[info exists ::env(TPROC_H_VIRTUAL_USERS)]} {
     set tproc_h_virtual_users 8
 }
 
-if {[info exists ::env(TPROC_H_MINUTES)]} {
-    set tproc_h_minutes $::env(TPROC_H_MINUTES)
-} else {
-    set tproc_h_minutes 5
-}
-
 if {[info exists ::env(TPROC_H_DRIVER)]} {
     set tproc_h_driver $::env(TPROC_H_DRIVER)
 } else {
@@ -33,7 +27,6 @@ puts "SETTING UP TPC-H LOAD TEST"
 puts "Environment variables loaded:"
 puts "  Database: $tproc_h_database_name"
 puts "  Virtual Users: $tproc_h_virtual_users"
-puts "  Duration: $tproc_h_minutes minutes"
 puts "  Driver: $tproc_h_driver"
 
 # Set up the database connection details for MSSQL
@@ -55,7 +48,6 @@ diset tpch mssqls_total_querysets 1
 
 # Test run parameters
 set vuser_count $tproc_h_virtual_users
-set test_duration $tproc_h_minutes
 
 # Configure test options and load scripts
 vuset logtotemp 1
@@ -63,7 +55,6 @@ loadscript
 
 puts "STARTING TPC-H VIRTUAL USERS"
 puts "Virtual Users: $vuser_count"
-puts "Duration: $test_duration minutes"
 puts "Output will be logged to: $tmpdir/mssqls_tproch"
 
 vuset vu $vuser_count
