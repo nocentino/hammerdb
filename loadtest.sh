@@ -62,13 +62,13 @@ echo "TPC-C simulates an OLTP environment with complex transactions"
 echo ""
 
 echo "Step 1: Building TPC-C schema..."
-RUN_MODE=build BENCHMARK=tprocc docker-compose up
+RUN_MODE=build BENCHMARK=tprocc docker compose up
 
 echo "Step 2: Running TPC-C load test..."
-RUN_MODE=load BENCHMARK=tprocc docker-compose up
+RUN_MODE=load BENCHMARK=tprocc docker compose up
 
 echo "Step 3: Parsing TPC-C test results..."
-RUN_MODE=parse BENCHMARK=tprocc docker-compose up
+RUN_MODE=parse BENCHMARK=tprocc docker compose up
 
 echo ""
 echo "=== TPC-H BENCHMARK TESTS ==="
@@ -84,13 +84,13 @@ if [ -d "output" ]; then
 fi
 
 echo "Step 1: Building TPC-H schema..."
-RUN_MODE=build BENCHMARK=tproch docker-compose up
+RUN_MODE=build BENCHMARK=tproch docker compose up
 
 echo "Step 2: Running TPC-H load test..."
-RUN_MODE=load BENCHMARK=tproch docker-compose up
+RUN_MODE=load BENCHMARK=tproch docker compose up
 
 echo "Step 3: Parsing TPC-H test results..."
-RUN_MODE=parse BENCHMARK=tproch docker-compose up
+RUN_MODE=parse BENCHMARK=tproch docker compose up
 
 # ============================
 # CLEANUP OPERATIONS

@@ -29,7 +29,7 @@ dbset bm TPC-C
 # Set up the database connection details for MSSQL
 diset connection mssqls_server $sql_server_host
 diset connection mssqls_linux_server $sql_server_host
-diset connection mssqls_user $username
+diset connection mssqls_uid $username
 diset connection mssqls_pass $password
 diset connection mssqls_tcp true
 diset connection mssqls_authentication sql
