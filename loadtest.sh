@@ -141,3 +141,16 @@ echo "Cleaning up output directory (optional - uncomment to enable)..."
 #
 ##############################################################################################################
 
+
+# to start the container in interactive mode.
+docker run -it --network host \
+  --env-file hammerdb.env \
+  --env RUN_MODE=parse \
+  --env BENCHMARK=tprocc \
+  --env TMP=/tmp \
+  -v $(pwd)/scripts:/opt/HammerDB-5.0/scripts \
+  -v $(pwd)/output:/tmp \
+  -v $(pwd)/output/bcp_data_tpcc:/tmp/bcp_data_tpcc \
+  -v $(pwd)/output/bcp_data_tproch:/tmp/bcp_data_tproch \
+  --entrypoint /bin/bash \
+  hammerdb:latest

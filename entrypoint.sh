@@ -51,10 +51,10 @@ else
 fi
 
 # Check if the script exists
-if [ ! -f "/opt/HammerDB-4.7/scripts/$SCRIPT_NAME" ]; then
-  echo "Error: Script '/opt/HammerDB-4.7/scripts/$SCRIPT_NAME' not found."
+if [ ! -f "/opt/HammerDB-5.0/scripts/$SCRIPT_NAME" ]; then
+  echo "Error: Script '/opt/HammerDB-5.0/scripts/$SCRIPT_NAME' not found."
   exit 1
 fi
 
 # Run the specified HammerDB script
-/opt/HammerDB-4.7/hammerdbcli auto /opt/HammerDB-4.7/scripts/$SCRIPT_NAME
+/opt/HammerDB-5.0/hammerdbcli auto /opt/HammerDB-5.0/scripts/$SCRIPT_NAME

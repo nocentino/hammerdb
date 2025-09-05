@@ -12,7 +12,10 @@ services:
         environment:
           - RUN_MODE
           - BENCHMARK
+          - TMP=/tmp
         volumes:
-          - ./scripts:/opt/HammerDB-4.7/scripts
+          - ./scripts:/opt/HammerDB-5.0/scripts
           - ./output:/tmp
+          - ./output/bcp_data_tpcc:/tmp/bcp_data_tpcc
+          - ./output/bcp_data_tproch:/tmp/bcp_data_tproch
         command: ["/entrypoint.sh"]

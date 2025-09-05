@@ -7,7 +7,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 # Install packages, configure shell and clean up cache
 RUN apt-get update && \
     apt-get install -y apt-transport-https curl gnupg2 wget python3 vim && \
-    curl -sSL https://packages.microsoft.com/config/ubuntu/20.04/prod.list | tee /etc/apt/sources.list.d/microsoft-prod.list && \
+    curl -sSL https://packages.microsoft.com/config/ubuntu/22.04/prod.list | tee /etc/apt/sources.list.d/mssql-release.list && \
     curl -sSL https://packages.microsoft.com/keys/microsoft.asc | tee /etc/apt/trusted.gpg.d/microsoft.asc && \
     apt-get update && ACCEPT_EULA=Y apt-get install -y mssql-tools18 msodbcsql18 unixodbc unixodbc-dev && \
     echo 'export PATH="$PATH:/opt/mssql-tools18/bin"' >> ~/.bashrc && \
@@ -25,11 +25,11 @@ RUN wget https://github.com/TPC-Council/HammerDB/releases/download/v5.0/HammerDB
 
 # Set HammerDB as executable
 WORKDIR /opt/HammerDB-5.0
-RUN chmod +x ./hammerdbcli
-
-
-# Add a script to automate SQL Server TPC-C test
-#COPY ./scripts /opt/HammerDB-5.0/scripts
+RUN chmod +x ./hammerdbcli && \
+    # Create symbolic link to bcp in the current directory
+    ln -sf /opt/mssql-tools18/bin/bcp /opt/HammerDB-5.0/bcp && \
+    # Also add it to system path
+    ln -sf /opt/mssql-tools18/bin/bcp /usr/local/bin/bcp
 
 
 # Add the entrypoint script
