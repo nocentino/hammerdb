@@ -41,18 +41,18 @@ diset tpcc mssqls_driver timed
 diset tpcc mssqls_allwarehouse true
 diset tpcc mssqls_noofterminals 10
 
-# Configure BCP option if enabled
-if {$tpcc_use_bcp} {
-    puts "Enabling BCP for faster data loading"
-    diset tpcc mssqls_use_bcp true
+
+# Check if BCP option is enabled (now using common USE_BCP variable)
+if {[info exists ::env(USE_BCP)] && $::env(USE_BCP) eq "true"} {
+    set mssqls_use_bcp true
+    puts "Using BCP for data loading"
     
-    # BCP requires a path for data files - set to /tmp as a default
-    diset tpcc mssqls_bcp_filespath "/tmp/bcp_data_tpcc"
-    
-    # Ensure the directory exists
-    if {[catch {exec mkdir -p /tmp/bcp_data_tpcc} err]} {
-        puts "Warning: Could not create BCP directory: $err"
-    }
+    # Set BCP files path
+    set mssqls_bcp_filespath "/tmp/bcp_data/bcp_data_tprocc"
+    puts "Using BCP files path: "/tmp/bcp_data/bcp_data_tprocc"
+} else {
+    set mssqls_use_bcp false
+    puts "Using standard data loading (BCP disabled)"
 }
 
 # Load the TPC-C script

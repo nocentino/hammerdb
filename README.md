@@ -40,7 +40,6 @@ This repository provides standardized HammerDB benchmarks against SQL Server ins
    TPROC_H_VIRTUAL_USERS=8
    TPROC_H_USE_BCP=true
    MSSQLS_TPCH_USE_BCP=true
-   MSSQLS_TPCH_BCP_FILESPATH=/tmp/bcp_data_tproch
    ```
 
 ## Usage
@@ -74,9 +73,7 @@ chmod +x loadtest.sh
 
 ## Troubleshooting
 
-- **Disk Space**: TPC-H with scale factor 30 requires ~50GB free space
-- **Interactive Shell**: `docker compose run --entrypoint bash hammerdb`
-- **Missing BCP**: Rebuild with `docker compose build --no-cache`
+- **Disk Space**: TPC-H with scale factor 30 requires ~50GB free space on the client system for the bcp files.
 - **Results Location**: Check output directory for benchmark results
 
 ## Recent Updates
