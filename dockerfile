@@ -16,30 +16,30 @@ RUN apt-get update && \
     rm -rf /var/apt/cache/* /tmp/* /var/tmp/* /var/lib/apt/lists
 
     
-# Install configure HammerDB-v4.7...change this to get the latest
+# Install configure HammerDB-v5.0...change this to get the latest
 WORKDIR /opt
-RUN wget https://github.com/TPC-Council/HammerDB/releases/download/v4.7/HammerDB-4.7-Linux.tar.gz && \
-    tar -xvzf HammerDB-4.7-Linux.tar.gz && ls && \
+RUN wget https://github.com/TPC-Council/HammerDB/releases/download/v5.0/HammerDB-5.0-Prod-Lin-UBU24.tar.gz && \
+    tar -xvzf HammerDB-5.0-Prod-Lin-UBU24.tar.gz && ls && \
     echo 'export LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu/:$LD_LIBRARY_PATH'  >> ~/.bashrc
 
 
 # Set HammerDB as executable
-WORKDIR /opt/HammerDB-4.7
+WORKDIR /opt/HammerDB-5.0
 RUN chmod +x ./hammerdbcli
 
 
 # Add a script to automate SQL Server TPC-C test
-#COPY ./scripts /opt/HammerDB-4.7/scripts
+#COPY ./scripts /opt/HammerDB-5.0/scripts
 
 
 # Add the entrypoint script
-COPY entrypoint.sh /opt/HammerDB-4.7/entrypoint.sh
-RUN chmod +x /opt/HammerDB-4.7/entrypoint.sh
+COPY entrypoint.sh /opt/HammerDB-5.0/entrypoint.sh
+RUN chmod +x /opt/HammerDB-5.0/entrypoint.sh
 
 
 # Set the working directory
-WORKDIR /opt/HammerDB-4.7
+WORKDIR /opt/HammerDB-5.0
 
 
 # Entry point
-ENTRYPOINT ["/opt/HammerDB-4.7/entrypoint.sh"]
+ENTRYPOINT ["/opt/HammerDB-5.0/entrypoint.sh"]

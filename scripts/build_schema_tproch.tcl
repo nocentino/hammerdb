@@ -10,6 +10,15 @@ set tproc_h_driver $::env(TPROC_H_DRIVER)
 set tproc_h_build_threads $::env(TPROC_H_BUILD_THREADS)
 set tproc_h_clustered_columnstore $::env(TPROC_H_USE_CLUSTERED_COLUMNSTORE)
 
+# Check if BCP option is enabled
+if {[info exists ::env(TPROC_H_USE_BCP)] && $::env(TPROC_H_USE_BCP) eq "true"} {
+    set tproc_h_use_bcp true
+    puts "Using BCP for data loading"
+} else {
+    set tproc_h_use_bcp false
+    puts "Using standard data loading (BCP disabled)"
+}
+
 # Validate required environment variables
 foreach var {USERNAME PASSWORD SQL_SERVER_HOST TPROC_H_DATABASE_NAME TPROC_H_SCALE_FACTOR TPROC_H_DRIVER TPROC_H_BUILD_THREADS} {
     if {![info exists ::env($var)] || $::env($var) eq ""} {
@@ -53,6 +62,20 @@ if {$tproc_h_clustered_columnstore eq "true"} {
 } else {
     puts "Using standard row-based storage"
     diset tpch mssqls_colstore false
+}
+
+# Configure BCP option if enabled
+if {$tproc_h_use_bcp} {
+    puts "Enabling BCP for faster data loading"
+    diset tpch mssqls_use_bcp true
+    
+    # BCP requires a path for data files - set to /tmp as a default
+    diset tpch mssqls_bcp_filespath "/tmp/bcp_data"
+    
+    # Ensure the directory exists
+    if {[catch {exec mkdir -p /tmp/bcp_data} err]} {
+        puts "Warning: Could not create BCP directory: $err"
+    }
 }
 
 # Load the TPC-H script
