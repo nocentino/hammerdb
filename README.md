@@ -1,81 +1,86 @@
 # HammerDB in Docker Compose
 
-This repository allows for standardized HammerDB testing against SQL Server instances, with settings controlled through an environment file.
+This repository provides standardized HammerDB benchmarks against SQL Server instances using Docker, with configuration via environment variables.
 
 ## Supported Benchmarks
-- **TPC-C**: Transaction Processing Performance Council Benchmark C (OLTP workload)
-- **TPC-H**: Transaction Processing Performance Council Benchmark H (OLAP workload)
+- **TPC-C**: OLTP workload benchmark
+- **TPC-H**: OLAP/analytical query benchmark
 
 ## Quick Start
 
-1. Pull down the repository to a server running Docker:
-```bash
-git clone https://github.com/nocentino/hammerdb.git
-cd hammerdb
-```
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/nocentino/hammerdb.git
+   cd hammerdb
+   ```
 
-2. Create a `hammerdb.env` file with the following variables:
+2. Create a hammerdb.env file with your configuration:
+   ```env
+   # Database Connection
+   USERNAME=sa
+   PASSWORD=YourStrongPassword
+   SQL_SERVER_HOST=localhost,4001
+   MSSQLS_MAXDOP=0
 
-```env
-# Database Connection
-USERNAME=sa
-PASSWORD=YourStrongPassword
-SQL_SERVER_HOST=localhost,4001
-MSSQLS_MAXDOP=0
+   # TPC-C Configuration
+   TPCC_DATABASE_NAME=tpcc
+   VIRTUAL_USERS=8
+   WAREHOUSES=10
+   RAMPUP=0
+   DURATION=1
+   TOTAL_ITERATIONS=10000000
+   TPCC_USE_BCP=true
 
-# TPC-C Configuration
-TPCC_DATABASE_NAME=tpcc
-VIRTUAL_USERS=8
-WAREHOUSES=10
-RAMPUP=0
-DURATION=1
-TOTAL_ITERATIONS=10000000
-
-# TPC-H Configuration
-TPROC_H_DATABASE_NAME=tpch
-TPROC_H_SCALE_FACTOR=1
-TPROC_H_DRIVER=mssqls
-TPROC_H_BUILD_THREADS=8
-TPROC_H_USE_CLUSTERED_COLUMNSTORE=false
-TPROC_H_VIRTUAL_USERS=8
-TPROC_H_MINUTES=5
-```
+   # TPC-H Configuration
+   TPROC_H_DATABASE_NAME=tpch
+   TPROC_H_SCALE_FACTOR=30  # Reduce if disk space is limited
+   TPROC_H_DRIVER=mssqls
+   TPROC_H_BUILD_THREADS=8
+   TPROC_H_USE_CLUSTERED_COLUMNSTORE=true
+   TPROC_H_VIRTUAL_USERS=8
+   TPROC_H_USE_BCP=true
+   MSSQLS_TPCH_USE_BCP=true
+   MSSQLS_TPCH_BCP_FILESPATH=/tmp/bcp_data_tproch
+   ```
 
 ## Usage
 
-### TPC-C Benchmark
+### Running Individual Benchmark Stages
 ```bash
-# Build TPC-C schema
-RUN_MODE=build BENCHMARK=tprocc docker-compose up
+# TPC-C Benchmark
+RUN_MODE=build BENCHMARK=tprocc docker compose up
+RUN_MODE=load BENCHMARK=tprocc docker compose up
+RUN_MODE=parse BENCHMARK=tprocc docker compose up
 
-# Run TPC-C load test
-RUN_MODE=load BENCHMARK=tprocc docker-compose up
-
-# Parse TPC-C results
-RUN_MODE=parse BENCHMARK=tprocc docker-compose up
-```
-
-### TPC-H Benchmark
-```bash
-# Build TPC-H schema
-RUN_MODE=build BENCHMARK=tproch docker-compose up
-
-# Run TPC-H load test
-RUN_MODE=load BENCHMARK=tproch docker-compose up
-
-# Parse TPC-H results
-RUN_MODE=parse BENCHMARK=tproch docker-compose up
+# TPC-H Benchmark
+RUN_MODE=build BENCHMARK=tproch docker compose up
+RUN_MODE=load BENCHMARK=tproch docker compose up
+RUN_MODE=parse BENCHMARK=tproch docker compose up
 ```
 
 ### Automated Testing
 ```bash
-# Make script executable and run all tests
 chmod +x loadtest.sh
 ./loadtest.sh
 ```
 
-    RUN_MODE=load BENCHMARK=tprocc docker-compose up 
+## Technical Details
 
-To parse results of the performance test: -
+- **Base Image**: Ubuntu 24.04 (supports HammerDB 5.0)
+- **Features**: 
+  - BCP support for faster data loading
+  - Configurable scale factors and virtual users
+  - Clustered columnstore option for better analytics performance
 
-    RUN_MODE=parse BENCHMARK=tprocc docker-compose up
+## Troubleshooting
+
+- **Disk Space**: TPC-H with scale factor 30 requires ~50GB free space
+- **Interactive Shell**: `docker compose run --entrypoint bash hammerdb`
+- **Missing BCP**: Rebuild with `docker compose build --no-cache`
+- **Results Location**: Check output directory for benchmark results
+
+## Recent Updates
+- Ubuntu 24.04 base image for HammerDB 5.0 compatibility
+- BCP integration for faster data loading
+- Improved environment variable handling
+- Fixed path and dependency issues
