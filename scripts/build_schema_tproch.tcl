@@ -80,12 +80,11 @@ if {$tproc_h_clustered_columnstore eq "true"} {
 diset tpch mssqls_use_bcp $mssqls_use_bcp
 diset tpch mssqls_bcp_filespath $mssqls_bcp_filespath
 
-# These lines need to be added after your BCP check block:
+# You set the path here:
+set mssqls_bcp_filespath "$::env(BCP_PATH)/tproch"
+
+# But you never create the directory. Add this:
 if {$mssqls_use_bcp} {
-    diset tpch mssqls_use_bcp true
-    diset tpch mssqls_bcp_filespath $mssqls_bcp_filespath
-    
-    # Create directory if it doesn't exist
     if {[catch {exec mkdir -p $mssqls_bcp_filespath} err]} {
         puts "Warning: Could not create BCP directory: $err"
     }

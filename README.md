@@ -73,7 +73,7 @@ chmod +x loadtest.sh
 
 ## Troubleshooting
 
-- **Disk Space**: TPC-H with scale factor 30 requires ~50GB free space on the client system for the bcp files.
+- **Disk Space**: TPC-H with scale factor 30 requires ~30GB free space on the client system for the bcp files.
 - **Results Location**: Check output directory for benchmark results
 
 ## Recent Updates
@@ -81,3 +81,9 @@ chmod +x loadtest.sh
 - BCP integration for faster data loading
 - Improved environment variable handling
 - Fixed path and dependency issues
+
+## Output Structure
+- Benchmark results: `./output/mssqls_tprocc*`, `./output/mssqls_tproch*`
+- BCP data files:
+  - TPC-C: `./output/bcp_data/tpcc/`
+  - TPC-H: `./output/bcp_data/tproch/`

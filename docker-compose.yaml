@@ -16,4 +16,5 @@ services:
         volumes:
           - ./scripts:/opt/HammerDB-5.0/scripts
           - ./output:/tmp
+          - ./output/bcp_data:/tmp/bcp_data
         command: ["/entrypoint.sh"]

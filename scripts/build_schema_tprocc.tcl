@@ -6,13 +6,12 @@ set sql_server_host $::env(SQL_SERVER_HOST)
 set tpcc_database_name $::env(TPCC_DATABASE_NAME)
 set warehouses $::env(WAREHOUSES)
 
-# Check if BCP option is enabled
-if {[info exists ::env(TPCC_USE_BCP)] && $::env(TPCC_USE_BCP) eq "true"} {
-    set mssqls_use_bcp true
-    puts "Using BCP for data loading"
-} else {
-    set mssqls_use_bcp false
-    puts "Using standard data loading (BCP disabled)"
+# Validate required environment variables
+foreach var {USERNAME PASSWORD SQL_SERVER_HOST TPCC_DATABASE_NAME WAREHOUSES} {
+    if {![info exists ::env($var)] || $::env($var) eq ""} {
+        puts "Error: Environment variable $var is not set or empty"
+        exit 1
+    }
 }
 
 # Database connection parameters
@@ -41,19 +40,24 @@ diset tpcc mssqls_driver timed
 diset tpcc mssqls_allwarehouse true
 diset tpcc mssqls_noofterminals 10
 
-
 # Check if BCP option is enabled (now using common USE_BCP variable)
 if {[info exists ::env(USE_BCP)] && $::env(USE_BCP) eq "true"} {
     set mssqls_use_bcp true
     puts "Using BCP for data loading"
     
     # Set BCP files path
-    set mssqls_bcp_filespath "/tmp/bcp_data/bcp_data_tprocc"
-    puts "Using BCP files path: "/tmp/bcp_data/bcp_data_tprocc"
+    if {[info exists ::env(BCP_PATH)]} {
+        set mssqls_bcp_filespath "$::env(BCP_PATH)/tproch"
+        puts "Using BCP files path: $mssqls_bcp_filespath"
+    } else {
+        set mssqls_bcp_filespath "/tmp/bcp_data/tproch"
+        puts "Using default BCP files path: $mssqls_bcp_filespath"
+    }
 } else {
     set mssqls_use_bcp false
     puts "Using standard data loading (BCP disabled)"
 }
+
 
 # Load the TPC-C script
 loadscript
