@@ -8,10 +8,10 @@ set warehouses $::env(WAREHOUSES)
 
 # Check if BCP option is enabled
 if {[info exists ::env(TPCC_USE_BCP)] && $::env(TPCC_USE_BCP) eq "true"} {
-    set tpcc_use_bcp true
+    set mssqls_use_bcp true
     puts "Using BCP for data loading"
 } else {
-    set tpcc_use_bcp false
+    set mssqls_use_bcp false
     puts "Using standard data loading (BCP disabled)"
 }
 
