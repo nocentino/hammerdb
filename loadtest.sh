@@ -75,13 +75,6 @@ echo "=== TPC-H BENCHMARK TESTS ==="
 echo "TPC-H simulates an OLAP environment with analytical queries"
 echo ""
 
-echo "Cleaning output directory for TPC-H tests..."
-# Create backup of TPC-C results
-if [ -d "output" ]; then
-    timestamp=$(date +"%Y%m%d_%H%M%S")
-    mkdir -p "output/tpcc_results_$timestamp"
-    cp output/mssqls_tprocc* "output/tpcc_results_$timestamp/" 2>/dev/null || true
-fi
 
 echo "Step 1: Building TPC-H schema..."
 RUN_MODE=build BENCHMARK=tproch docker compose up

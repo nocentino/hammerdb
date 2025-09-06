@@ -1,10 +1,11 @@
 # HammerDB Benchmark Scripts for SQL Server
 
-This repository contains automated HammerDB benchmark scripts for running TPC-C (TPROC-C) and TPC-H (TPROC-H) workloads against Microsoft SQL Server.
+This repository contains automated HammerDB benchmark scripts for running TPC-C (TPROC-C) and TPC-H (TPROC-H) workloads against Microsoft SQL Server using Docker containers.
 
 ## Overview
 
 The scripts provide a streamlined way to:
+- Automatically set up SQL Server 2022 and 2025 containers
 - Build TPC-C and TPC-H schemas
 - Run benchmark tests with configurable parameters
 - Extract and format test results
@@ -13,9 +14,8 @@ All configuration is managed through environment variables, making it easy to ad
 
 ## Prerequisites
 
-- HammerDB installed and configured
-- Microsoft SQL Server instance accessible
-- TCL shell (usually included with HammerDB)
+- Docker and Docker Compose installed
+- Sufficient disk space for SQL Server containers and test databases
 - BCP utility (optional, for faster data loading)
 
 ## Project Structure
@@ -23,6 +23,8 @@ All configuration is managed through environment variables, making it easy to ad
 ```
 hammerdb/
 ├── hammerdb.env                    # Environment configuration file
+├── docker-compose.yml              # Docker Compose configuration
+├── loadtest.sh                     # Main execution script
 ├── scripts/
 │   ├── build_schema_tprocc.tcl    # Build TPC-C schema
 │   ├── build_schema_tproch.tcl    # Build TPC-H schema
@@ -30,7 +32,81 @@ hammerdb/
 │   ├── load_test_tproch.tcl       # Run TPC-H benchmark
 │   ├── generic_tprocc_result.tcl  # Extract TPC-C results
 │   └── db_connection.tcl          # Shared database connection logic
+├── output/                         # Test results directory (created automatically)
 └── README.md                       # This file
+```
+
+## Quick Start
+
+### 1. Clone the repository
+```bash
+git clone <repository-url>
+cd hammerdb
+```
+
+### 2. Configure your test parameters
+Edit `hammerdb.env` to match your requirements. See [Configuration](#configuration) section for details.
+
+### 3. Run the complete benchmark suite
+```bash
+chmod +x loadtest.sh
+./loadtest.sh
+```
+
+This script will:
+1. Pull SQL Server Docker images (2022 and 2025-RC0)
+2. Start SQL Server containers on ports 4000 and 4001
+3. Build and run TPC-C benchmarks
+4. Build and run TPC-H benchmarks
+5. Save results to the `output/` directory
+
+## Running Individual Components
+
+If you prefer to run components separately:
+
+### Start SQL Server Containers
+```bash
+# SQL Server 2022 on port 4000
+docker run \
+    --env 'ACCEPT_EULA=Y' \
+    --env 'MSSQL_SA_PASSWORD=S0methingS@Str0ng!' \
+    --name 'sql_2022' \
+    --volume sqldata_2022:/var/opt/mssql \
+    --publish 4000:1433 \
+    --platform=linux/amd64 \
+    --detach mcr.microsoft.com/mssql/server:2022-latest
+
+# SQL Server 2025-RC0 on port 4001
+docker run \
+    --env 'ACCEPT_EULA=Y' \
+    --env 'MSSQL_SA_PASSWORD=S0methingS@Str0ng!' \
+    --name 'sql_2025' \
+    --volume sqldata_2025:/var/opt/mssql \
+    --publish 4001:1433 \
+    --platform=linux/amd64 \
+    --detach mcr.microsoft.com/mssql/server:2025-RC0-ubuntu-24.04
+```
+
+### Run HammerDB Tests with Docker Compose
+
+```bash
+# TPC-C Schema Build
+RUN_MODE=build BENCHMARK=tprocc docker compose up
+
+# TPC-C Load Test
+RUN_MODE=load BENCHMARK=tprocc docker compose up
+
+# TPC-C Results Parsing
+RUN_MODE=parse BENCHMARK=tprocc docker compose up
+
+# TPC-H Schema Build
+RUN_MODE=build BENCHMARK=tproch docker compose up
+
+# TPC-H Load Test
+RUN_MODE=load BENCHMARK=tproch docker compose up
+
+# TPC-H Results Parsing
+RUN_MODE=parse BENCHMARK=tproch docker compose up
 ```
 
 ## Configuration
@@ -41,8 +117,8 @@ All configuration is managed through the `hammerdb.env` file. Copy and modify th
 
 #### Database Connection
 - `USERNAME`: SQL Server username (default: sa)
-- `PASSWORD`: SQL Server password
-- `SQL_SERVER_HOST`: SQL Server host and port (e.g., localhost,1433)
+- `PASSWORD`: SQL Server password (default: S0methingS@Str0ng!)
+- `SQL_SERVER_HOST`: SQL Server host and port (default: localhost,4001)
 
 #### Common Settings
 - `USE_BCP`: Enable BCP for faster data loading (true/false)
@@ -127,12 +203,6 @@ TPROCH_TOTAL_QUERYSETS=1        # One complete run
 TPROCH_MAXDOP=8                 # Use all cores for queries
 ```
 
-**Rationale:**
-- **50 Warehouses**: Creates ~5GB database that fits in RAM with room for SQL Server buffer pool
-- **16 Virtual Users**: 2x core count is ideal starting point for OLTP workloads
-- **Scale Factor 10**: 10GB TPC-H dataset leaves ~14GB for query processing
-- **4 Build Threads**: Optimizes schema creation without overloading system
-
 ### 4-Core System with 16GB RAM
 
 ```bash
@@ -189,60 +259,19 @@ TPROCH_MAXDOP=16
    - Minimal during steady-state for properly sized tests
    - High I/O indicates insufficient memory
 
-### Optimization Steps
-
-1. **Initial Run**: Use recommended defaults
-2. **Monitor Resources**: Check CPU, memory, and I/O
-3. **Adjust Virtual Users**:
-   - If CPU < 70%: Increase by 25%
-   - If CPU = 100%: Decrease by 10%
-4. **Fine-tune**: Run multiple iterations and average results
-
-## Usage
-
-### 1. Set up environment variables
-
-```bash
-# Load environment variables
-source hammerdb.env
-```
-
-### 2. Build schemas
-
-```bash
-# Build TPC-C schema
-hammerdbcli auto scripts/build_schema_tprocc.tcl
-
-# Build TPC-H schema
-hammerdbcli auto scripts/build_schema_tproch.tcl
-```
-
-### 3. Run benchmarks
-
-```bash
-# Run TPC-C benchmark
-hammerdbcli auto scripts/load_test_tprocc.tcl
-
-# Run TPC-H benchmark
-hammerdbcli auto scripts/load_test_tproch.tcl
-```
-
-### 4. Extract results
-
-```bash
-# Extract TPC-C results
-hammerdbcli auto scripts/generic_tprocc_result.tcl
-```
-
 ## Output Files
 
-- **TPC-C results**: `$TMPDIR/mssqls_tprocc_<jobid>.out`
-- **TPC-H results**: `$TMPDIR/mssqls_tproch_<jobid>.out`
+Test results are saved in the `output/` directory:
+
+- **TPC-C results**: `output/mssqls_tprocc_<jobid>.out`
+- **TPC-H results**: `output/mssqls_tproch_<jobid>.out`
 
 The output files contain:
 - Transaction response times
 - Transaction counts
 - Overall benchmark results (TPM for TPC-C, query times for TPC-H)
+
+When running successive tests, TPC-C results are automatically backed up to timestamped directories.
 
 ## SQL Server Configuration
 
@@ -262,11 +291,64 @@ sp_configure 'max degree of parallelism', 1;
 RECONFIGURE;
 ```
 
+## Docker Volume Management
+
+The script creates persistent volumes for SQL Server data:
+- `sqldata_2022`: SQL Server 2022 data files
+- `sqldata_2025`: SQL Server 2025 data files
+- `sqlbackups`: Shared backup directory
+
+To clean up volumes:
+```bash
+docker volume rm sqldata_2022 sqldata_2025 sqlbackups
+```
+
 ## Troubleshooting
 
-1. **Connection Issues**: Verify SQL_SERVER_HOST format (host,port)
-2. **BCP Errors**: Ensure BCP utility is installed and in PATH
-3. **Permission Errors**: Check database user has necessary permissions
-4. **Output Not Found**: Verify TMPDIR exists and is writable
-5. **Out of Memory**: Reduce warehouse count or scale factor
+1. **Container Already Exists**: 
+   ```bash
+   docker rm -f sql_2022 sql_2025
+   ```
+
+2. **Port Already in Use**: Check if ports 4000/4001 are available
+   ```bash
+   lsof -i :4000
+   lsof -i :4001
+   ```
+
+3. **Connection Issues**: 
+   - Wait 30-60 seconds after container start for SQL Server to initialize
+   - Verify SQL_SERVER_HOST matches the container port mapping
+
+4. **BCP Errors**: Ensure BCP utility is installed in the HammerDB container
+
+5. **Permission Errors**: Check database user has necessary permissions
+
+6. **Out of Memory**: Reduce warehouse count or scale factor
+
+## Cleanup
+
+To completely clean up after testing:
+
+```bash
+# Stop and remove containers
+docker-compose down
+
+# Remove SQL Server containers
+docker rm -f sql_2022 sql_2025
+
+# Remove volumes (WARNING: This deletes all data)
+docker volume rm sqldata_2022 sqldata_2025 sqlbackups
+
+# Clean output directory
+rm -rf output/*
+```
+
+## Notes
+
+- The script automatically handles SQL Server container lifecycle
+- Results are preserved between runs in the `output/` directory
+- All TPC-C references use the `TPROCC_` prefix
+- All TPC-H references use the `TPROCH_` prefix
+- Default configuration tests against SQL Server 2025-RC0 on port 4001
 
