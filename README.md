@@ -50,10 +50,12 @@ Edit `hammerdb.env` to match your requirements. See [Configuration](#configurati
 
 ## 3. Running Individual Components
 
-This environment consists of three main components: SQL Server 2022 and 2025 test containers, and a containerized HammerDB implementation. For a quick start, you can launch the SQL Server 2025 container and run the tests shown below. After familiarizing yourself with the test environment, you can modify `hammerdb.env` to target any SQL Server instance on your network by changing the `SQL_SERVER_HOST` environment variable and execute load tests against production or staging systems. Be sure to adjust the configuration parameters as documented in the Configuration section below.
+This environment consists of two main components: a 2025 test container, and a containerized HammerDB implementation. For a quick start, you can launch the SQL Server 2025 container and run the tests shown below. After familiarizing yourself with the test environment, you can modify `hammerdb.env` to target any SQL Server instance on your network by changing the `SQL_SERVER_HOST` environment variable and execute load tests against production or staging systems. Be sure to adjust the configuration parameters as documented in the Configuration section below.
 
 ### Start SQL Server Containers
-# SQL Server 2025-RC0 on port 4001
+
+SQL Server 2025-RC0 on port 4001
+
 docker run \
     --env 'ACCEPT_EULA=Y' \
     --env 'MSSQL_SA_PASSWORD=S0methingS@Str0ng!' \

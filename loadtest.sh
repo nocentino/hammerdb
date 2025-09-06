@@ -100,38 +100,7 @@ echo "Cleaning up output directory (optional - uncomment to enable)..."
 
 
 
-# ============================
-# CONFIGURATION NOTES
-# ============================
-#
-# Environment Variables (configured in hammerdb.env):
-#
-# Database Connection:
-# - USERNAME: SQL Server login username (default: sa)
-# - PASSWORD: SQL Server login password
-# - SQL_SERVER_HOST: SQL Server host and port (default: localhost,4001)
-#
-# TPC-C Configuration:
-# - TPCC_DATABASE_NAME: Target database name for TPC-C tests
-# - VIRTUAL_USERS: Number of virtual users for TPC-C
-# - WAREHOUSES: Number of warehouses in TPC-C schema
-# - RAMPUP: Ramp-up time in minutes
-# - DURATION: Test duration in minutes
-# - TOTAL_ITERATIONS: Maximum number of transactions
-#
-# TPC-H Configuration:
-# - TPROC_H_DATABASE_NAME: Target database name for TPC-H tests
-# - TPROC_H_SCALE_FACTOR: Dataset size multiplier (1 = 1GB)
-# - TPROC_H_DRIVER: Database driver (mssqls for SQL Server)
-# - TPROC_H_BUILD_THREADS: Threads for schema building
-# - TPROC_H_USE_CLUSTERED_COLUMNSTORE: Enable columnstore indexes
-# - TPROC_H_VIRTUAL_USERS: Virtual users for TPC-H queries
-# - TPROC_H_MINUTES: TPC-H test duration in minutes
-#
-##############################################################################################################
-
-
-# to start the container in interactive mode.
+# To start the container in interactive mode, useful for debugging tests.
 docker run -it --network host \
   --env-file hammerdb.env \
   --env RUN_MODE=parse \
