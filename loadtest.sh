@@ -100,13 +100,3 @@ echo "Cleaning up output directory (optional - uncomment to enable)..."
 
 
 
-# To start the container in interactive mode, useful for debugging tests.
-docker run -it --network host \
-  --env-file hammerdb.env \
-  --env RUN_MODE=parse \
-  --env BENCHMARK=tprocc \
-  --env TMP=/tmp \
-  -v $(pwd)/scripts:/opt/HammerDB-5.0/scripts \
-  -v $(pwd)/output:/tmp \
-  --entrypoint /bin/bash \
-  hammerdb-hammerdb:latest

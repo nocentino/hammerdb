@@ -353,3 +353,24 @@ TPROCH_TOTAL_QUERYSETS=1        # One complete run
 TPROCH_MAXDOP=16                # Use all cores
 TPROCH_LOG_TO_TEMP=1
 ```
+
+
+### Troubleshooting
+
+To start the container in interactive mode, useful for debugging tests.
+
+```bash
+# if the container isn't built yet
+docker compose build
+
+# this will enter an interactive terminal inside the hammerdb container
+docker run -it --network host \
+  --env-file hammerdb.env \
+  --env RUN_MODE=parse \
+  --env BENCHMARK=tprocc \
+  --env TMP=/tmp \
+  -v $(pwd)/scripts:/opt/HammerDB-5.0/scripts \
+  -v $(pwd)/output:/tmp \
+  --entrypoint /bin/bash \
+  hammerdb-hammerdb:latest
+```
