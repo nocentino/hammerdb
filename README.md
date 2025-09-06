@@ -145,9 +145,9 @@ All configuration is managed through the `hammerdb.env` file. Copy and modify th
 
 ## Recommended Configuration for Different System Sizes
 
-Each configuration below provides a complete `hammerdb.env` file tailored for different hardware specifications. These configurations balance performance with system resources to achieve optimal benchmark results.
+Each configuration below provides a complete `hammerdb.env` file tailored for different hardware specifications. 
 
-### 8-Core System with 24GB RAM (Recommended Defaults)
+### 8-Core System with 24GB RAM 
 
 This configuration is optimized for a typical development/test workstation:
 
@@ -199,7 +199,7 @@ TPROCH_MAXDOP=8                 # Use all cores for queries
 TPROCH_LOG_TO_TEMP=1
 ```
 
-### 4-Core System with 16GB RAM
+### 4-Core System with 16GB RAM - a really small VM, either on-prem or in the cloud
 
 Optimized for smaller development systems or cloud instances:
 
@@ -251,7 +251,7 @@ TPROCH_MAXDOP=4                 # Use all cores
 TPROCH_LOG_TO_TEMP=1
 ```
 
-### 16-Core System with 64GB RAM
+### 16-Core System with 64GB RAM - A moderatly sized system
 
 Configuration for production-grade servers or high-performance workstations:
 
