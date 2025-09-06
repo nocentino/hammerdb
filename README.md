@@ -43,20 +43,19 @@ cd hammerdb
 
 # Configure for your environment
 cp hammerdb.env.example hammerdb.env
-# Edit hammerdb.env with your SQL Server connection details.
 
-# Run everything!
+# Run everything, build, load, and parse. 
 ./loadtest.sh
 ```
 
 ### 2. Configure your test parameters
 
-Once you have the environment up and running, not its time to customize it for your environment.  Edit `hammerdb.env` to match your requirements. See [Configuration](#configuration) section for details.
+Once you have the environment up and running, now its time to customize it for your environment.  Edit `hammerdb.env` to match your requirements. See [Configuration](#configuration) section for details.
 
 
 ## 3. Running Individual Components
 
-This environment consists of two main components: a 2025 test container, and a containerized HammerDB implementation. For a quick start, you can launch the SQL Server 2025 container and run the tests shown below. After familiarizing yourself with the test environment, you can modify `hammerdb.env` to target any SQL Server instance on your network by changing the `SQL_SERVER_HOST` environment variable and execute load tests against production or staging systems. Be sure to adjust the configuration parameters as documented in the Configuration section below.
+This environment consists of two main components: a 2025 test container, and a containerized HammerDB implementation. For a quick start, you can launch the SQL Server 2025 container and run the tests shown below. After familiarizing yourself with the test environment, you can modify `hammerdb.env` to target any SQL Server instance on your network by changing the `SQL_SERVER_HOST` environment variable and execute load tests against production or staging systems. Be sure to adjust the configuration parameters as documented in the [Configuration](#configuration) section below.
 
 ### Start SQL Server Container
 
@@ -75,9 +74,9 @@ docker run \
 
 ### Run HammerDB Tests with Docker Compose
 
-The HammerDB test execution is orchestrated through Docker Compose using environment variables to control the test mode and benchmark type. Each benchmark follows a three-phase process: schema building, load testing, and results parsing. The `RUN_MODE` variable determines which phase to execute (build, load, or parse), while the `BENCHMARK` variable specifies whether to run TPC-C (tprocc) or TPC-H (tproch) workloads. This modular approach allows you to run specific test phases independently or chain them together for complete benchmark execution. 
+The HammerDB test execution is orchestrated through Docker Compose using environment variables to control the test mode and benchmark type. Each benchmark follows a three-phase process: schema building, load testing, and results parsing. The `RUN_MODE` variable determines which phase to execute (`build`, `load`, or `parse`), while the `BENCHMARK` variable specifies whether to run TPC-C (`tprocc`) or TPC-H (`tproch`) workloads. This modular approach allows you to run specific test phases independently or chain them together for complete benchmark execution and testing multiple configurations iteratively.
 
-> **Note**: Schema building is a one-time operation per benchmark configuration. Once built, you can execute multiple load tests and parse results without rebuilding the schema, making iterative testing and configuration tuning more efficient.
+> **Note**: Schema building is a one-time operation per benchmark configuration and test size dimension. Once built, you can execute multiple load tests and parse results without rebuilding the schema, making iterative testing and configuration tuning more efficient.
 
 ```bash
 # TPC-C Schema Build
@@ -101,7 +100,7 @@ RUN_MODE=parse BENCHMARK=tproch docker compose up
 
 ## Configuration
 
-All configuration is managed through the `hammerdb.env` file. Copy and modify this file according to your environment.
+All configuration is managed through the `hammerdb.env` file. Below are the expose configration environment variables.
 
 ### Environment Variables
 
