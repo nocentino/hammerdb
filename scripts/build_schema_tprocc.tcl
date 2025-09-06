@@ -28,9 +28,6 @@ puts "  TPROCC_DRIVER_TYPE: $tprocc_driver_type"
 puts "  TPROCC_ALLWAREHOUSE: $tprocc_allwarehouse"
 puts "  USE_BCP: [expr {[info exists ::env(USE_BCP)] ? $::env(USE_BCP) : "not set"}]"
 
-# Database connection parameters
-source [file join [file dirname [info script]] "db_connection.tcl"]
-
 # Initialize HammerDB 
 puts "SETTING UP TPROC-C SCHEMA BUILD"
 dbset db mssqls

@@ -16,7 +16,6 @@ All configuration is managed through environment variables, making it easy to ad
 
 - Docker and Docker Compose installed
 - Sufficient disk space for SQL Server containers and test databases
-- BCP utility (optional, for faster data loading)
 
 ## Project Structure
 

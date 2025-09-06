@@ -23,9 +23,6 @@ foreach var {USERNAME PASSWORD SQL_SERVER_HOST TPROCH_DRIVER TPROCH_DATABASE_NAM
     }
 }
 
-# Database connection parameters
-source [file join [file dirname [info script]] "db_connection.tcl"]
-
 # Initialize HammerDB
 puts "SETTING UP TPROC-H LOAD TEST"
 puts "Environment variables loaded:"

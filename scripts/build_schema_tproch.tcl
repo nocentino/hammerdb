@@ -18,9 +18,6 @@ foreach var {USERNAME PASSWORD SQL_SERVER_HOST TPROCH_DATABASE_NAME TPROCH_SCALE
     }
 }
 
-# Database connection parameters
-source [file join [file dirname [info script]] "db_connection.tcl"]
-
 # Initialize HammerDB
 puts "SETTING UP TPROC-H SCHEMA BUILD"
 puts "Target database: $tproch_database_name"
