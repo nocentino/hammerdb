@@ -4,18 +4,21 @@ set username $::env(USERNAME)
 set password $::env(PASSWORD)
 set sql_server_host $::env(SQL_SERVER_HOST)
 
-# TPC-C specific variables
+# TPROC-C specific variables
 set mssqls_maxdop $::env(MSSQLS_MAXDOP)
 set virtual_users $::env(VIRTUAL_USERS)
-set tpcc_database_name $::env(TPCC_DATABASE_NAME)
-set tprocc_c_driver $::env(TPROC_C_DRIVER)
+set tprocc_database_name $::env(TPROCC_DATABASE_NAME)
+set tprocc_driver $::env(TPROCC_DRIVER)
 set rampup $::env(RAMPUP)
 set duration $::env(DURATION)
 set total_iterations $::env(TOTAL_ITERATIONS)
 set tmpdir $::env(TMPDIR)
-
-# Add warehouse variable
 set warehouses $::env(WAREHOUSES)
+set tprocc_log_to_temp $::env(TPROCC_LOG_TO_TEMP)
+set tprocc_use_transaction_counter $::env(TPROCC_USE_TRANSACTION_COUNTER)
+set tprocc_checkpoint $::env(TPROCC_CHECKPOINT)
+set tprocc_timeprofile $::env(TPROCC_TIMEPROFILE)
+
 
 # Check if all required environment variables are set
 if {![info exists username] || ![info exists password] || ![info exists sql_server_host]} {
@@ -24,9 +27,9 @@ if {![info exists username] || ![info exists password] || ![info exists sql_serv
 }
 
 # Initialize HammerDB
-puts "SETTING UP TPC-C LOAD TEST"
+puts "SETTING UP TPROC-C LOAD TEST"
 puts "Environment variables loaded:"
-puts "  Database: $tpcc_database_name"
+puts "  Database: $tprocc_database_name"
 puts "  Virtual Users: $virtual_users"
 puts "  Duration: $duration minutes"
 puts "  Rampup: $rampup minutes"
@@ -34,7 +37,7 @@ puts "  Total Iterations: $total_iterations"
 puts "  MAXDOP: $mssqls_maxdop"
 
 # Set up the database connection details for MSSQL
-dbset db $tprocc_c_driver
+dbset db $tprocc_driver
 
 # Set the benchmark to TPC-C
 dbset bm TPC-C
@@ -48,7 +51,7 @@ diset connection mssqls_tcp true
 diset connection mssqls_authentication sql
 
 # Configure TPC-C benchmark parameters
-diset tpcc mssqls_dbase $tpcc_database_name
+diset tpcc mssqls_dbase $tprocc_database_name
 diset tpcc mssqls_driver timed
 diset tpcc mssqls_total_iterations $total_iterations
 diset tpcc mssqls_rampup $rampup
@@ -57,10 +60,19 @@ diset tpcc mssqls_maxdop $mssqls_maxdop
 diset tpcc mssqls_allwarehouse true
 diset tpcc mssqls_count_ware $warehouses
 
+# Set checkpoint and timeprofile if they are true
+if {$tprocc_checkpoint eq "true"} {
+    diset tpcc mssqls_checkpoint true
+}
+if {$tprocc_timeprofile eq "true"} {
+    diset tpcc mssqls_timeprofile true
+}
+
 # Configure test options and load scripts
+vuset logtotemp $tprocc_log_to_temp
 loadscript
 
-puts "STARTING TPC-C VIRTUAL USERS"
+puts "STARTING TPROC-C VIRTUAL USERS"
 puts "Virtual Users: $virtual_users"
 puts "Duration: $duration minutes"
 puts "Output will be logged to: $tmpdir/mssqls_tprocc"
@@ -68,17 +80,26 @@ puts "Output will be logged to: $tmpdir/mssqls_tprocc"
 vuset vu $virtual_users
 vucreate
 puts "TEST STARTED"
-puts "Starting transaction counter..."
-tcstart
-tcstatus
+
+# Handle transaction counter based on environment variable
+if {$tprocc_use_transaction_counter eq "true"} {
+    puts "Starting transaction counter..."
+    tcstart
+    tcstatus
+}
+
 puts "About to run vurun command..."
 set jobid [ vurun ]
 puts "vurun completed with job ID: $jobid"
 vudestroy
-puts "Stopping transaction counter..."
-tcstop
+
+if {$tprocc_use_transaction_counter eq "true"} {
+    puts "Stopping transaction counter..."
+    tcstop
+}
+
 puts "Virtual users destroyed"
-puts "TPC-C LOAD TEST COMPLETE"
+puts "TPROC-C LOAD TEST COMPLETE"
 
 # Write job ID to output file for parsing
 puts "Creating output file at: $tmpdir/mssqls_tprocc"
