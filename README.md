@@ -67,7 +67,9 @@ docker run \
 
 ### Run HammerDB Tests with Docker Compose
 
-The HammerDB test execution is orchestrated through Docker Compose using environment variables to control the test mode and benchmark type. Each benchmark follows a three-phase process: schema building, load testing, and results parsing. The `RUN_MODE` variable determines which phase to execute (build, load, or parse), while the `BENCHMARK` variable specifies whether to run TPC-C (tprocc) or TPC-H (tproch) workloads. This modular approach allows you to run specific test phases independently or chain them together for complete benchmark execution.
+The HammerDB test execution is orchestrated through Docker Compose using environment variables to control the test mode and benchmark type. Each benchmark follows a three-phase process: schema building, load testing, and results parsing. The `RUN_MODE` variable determines which phase to execute (build, load, or parse), while the `BENCHMARK` variable specifies whether to run TPC-C (tprocc) or TPC-H (tproch) workloads. This modular approach allows you to run specific test phases independently or chain them together for complete benchmark execution. 
+
+> **Note**: Schema building is a one-time operation per benchmark configuration. Once built, you can execute multiple load tests and parse results without rebuilding the schema, making iterative testing and configuration tuning more efficient.
 
 ```bash
 # TPC-C Schema Build
