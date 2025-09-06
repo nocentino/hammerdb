@@ -34,16 +34,24 @@ hammerdb/
 └── README.md                       # This file
 ```
 
-## Quick Start
+## Getting Started: The 5-Minute Setup
 
-### 1. Clone the repository
 ```bash
-git clone <repository-url>
+# Clone the repository
+git clone https://github.com/nocentino/hammerdb.git
 cd hammerdb
+
+# Configure for your environment
+cp hammerdb.env.example hammerdb.env
+# Edit hammerdb.env with your SQL Server connection details.
+
+# Run everything!
+./loadtest.sh
 ```
 
 ### 2. Configure your test parameters
-Edit `hammerdb.env` to match your requirements. See [Configuration](#configuration) section for details.
+
+Once you have the environment up and running, not its time to customize it for your environment.  Edit `hammerdb.env` to match your requirements. See [Configuration](#configuration) section for details.
 
 
 ## 3. Running Individual Components
