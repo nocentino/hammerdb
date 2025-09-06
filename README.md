@@ -43,7 +43,6 @@ All configuration is managed through the `hammerdb.env` file. Copy and modify th
 - `USERNAME`: SQL Server username (default: sa)
 - `PASSWORD`: SQL Server password
 - `SQL_SERVER_HOST`: SQL Server host and port (e.g., localhost,1433)
-- `MSSQLS_MAXDOP`: Maximum degree of parallelism (0 = use server default)
 
 #### Common Settings
 - `USE_BCP`: Enable BCP for faster data loading (true/false)
@@ -85,6 +84,119 @@ All configuration is managed through the `hammerdb.env` file. Copy and modify th
 - `TPROCH_TOTAL_QUERYSETS`: Number of query sets to run
 - `TPROCH_MAXDOP`: Maximum degree of parallelism for queries
 - `TPROCH_LOG_TO_TEMP`: Log output to temp directory (0/1)
+
+## Recommended Configuration for Different System Sizes
+
+### 8-Core System with 24GB RAM (Recommended Defaults)
+
+This configuration is optimized for a typical development/test workstation:
+
+```bash
+# Database Connection
+USERNAME=sa
+PASSWORD=S0methingS@Str0ng!
+SQL_SERVER_HOST=localhost,4001
+
+# Common settings for all benchmarks
+USE_BCP=true
+TMPDIR=/tmp
+
+# TPROC-C Build settings
+TPROCC_BUILD_VIRTUAL_USERS=4    # Half your cores for parallel loading
+WAREHOUSES=50                    # ~5GB database, fits in memory
+TPROCC_DRIVER_TYPE=timed
+TPROCC_ALLWAREHOUSE=true
+
+# TPROC-C Test settings  
+VIRTUAL_USERS=16                 # 2x cores, can increase to 24-32
+RAMPUP=2                        # 2 minutes to stabilize
+DURATION=10                     # 10 minutes for meaningful results
+TOTAL_ITERATIONS=10000000       # Effectively unlimited
+TPROCC_USE_TRANSACTION_COUNTER=true
+TPROCC_CHECKPOINT=false
+TPROCC_TIMEPROFILE=true
+
+# TPROC-H Configuration
+TPROCH_SCALE_FACTOR=10          # 10GB dataset
+TPROCH_BUILD_THREADS=4          # Half your cores
+TPROCH_USE_CLUSTERED_COLUMNSTORE=true
+
+# TPROC-H Test settings
+TPROCH_VIRTUAL_USERS=4          # Lower for CPU-intensive queries
+TPROCH_TOTAL_QUERYSETS=1        # One complete run
+TPROCH_MAXDOP=8                 # Use all cores for queries
+```
+
+**Rationale:**
+- **50 Warehouses**: Creates ~5GB database that fits in RAM with room for SQL Server buffer pool
+- **16 Virtual Users**: 2x core count is ideal starting point for OLTP workloads
+- **Scale Factor 10**: 10GB TPC-H dataset leaves ~14GB for query processing
+- **4 Build Threads**: Optimizes schema creation without overloading system
+
+### 4-Core System with 16GB RAM
+
+```bash
+TPROCC_BUILD_VIRTUAL_USERS=2
+WAREHOUSES=30                    # ~3GB database
+VIRTUAL_USERS=8                  # 2x cores
+TPROCH_SCALE_FACTOR=5            # 5GB dataset
+TPROCH_BUILD_THREADS=2
+TPROCH_VIRTUAL_USERS=2
+TPROCH_MAXDOP=4
+```
+
+### 16-Core System with 64GB RAM
+
+```bash
+TPROCC_BUILD_VIRTUAL_USERS=8
+WAREHOUSES=200                   # ~20GB database
+VIRTUAL_USERS=32                 # Start with 2x cores
+TPROCH_SCALE_FACTOR=30           # 30GB dataset
+TPROCH_BUILD_THREADS=8
+TPROCH_VIRTUAL_USERS=8
+TPROCH_MAXDOP=16
+```
+
+## Performance Tuning Guidelines
+
+### System Sizing Formula
+
+1. **Warehouse Count**: 
+   - Formula: `(Available RAM in GB - 8) / 0.1`
+   - Example: 24GB RAM = (24-8)/0.1 = 160 max warehouses
+   - Recommendation: Use 30-50% of max for headroom
+
+2. **Virtual Users (TPROC-C)**:
+   - Start: 2x CPU cores
+   - Maximum: 4x CPU cores
+   - Adjust based on CPU utilization
+
+3. **TPC-H Scale Factor**:
+   - Formula: `(Available RAM in GB - 8) / 2`
+   - Ensures dataset can be cached effectively
+
+### Monitoring During Tests
+
+1. **CPU Utilization**:
+   - TPROC-C: Target 70-90%
+   - TPROC-H: Expect near 100% during query execution
+
+2. **Memory Usage**:
+   - Should stay below 90% of total RAM
+   - Monitor SQL Server buffer cache hit ratio (>95%)
+
+3. **Disk I/O**:
+   - Minimal during steady-state for properly sized tests
+   - High I/O indicates insufficient memory
+
+### Optimization Steps
+
+1. **Initial Run**: Use recommended defaults
+2. **Monitor Resources**: Check CPU, memory, and I/O
+3. **Adjust Virtual Users**:
+   - If CPU < 70%: Increase by 25%
+   - If CPU = 100%: Decrease by 10%
+4. **Fine-tune**: Run multiple iterations and average results
 
 ## Usage
 
@@ -132,19 +244,22 @@ The output files contain:
 - Transaction counts
 - Overall benchmark results (TPM for TPC-C, query times for TPC-H)
 
-## Example Configuration
+## SQL Server Configuration
 
-Here's a minimal example configuration for a small test environment:
+For optimal performance, configure SQL Server with:
 
-```bash
-# hammerdb.env
-USERNAME=sa
-PASSWORD=YourStrong!Password
-SQL_SERVER_HOST=localhost,1433
-WAREHOUSES=10
-VIRTUAL_USERS=4
-DURATION=5
-TPROCH_SCALE_FACTOR=1
+```sql
+-- Set max server memory (leave 4GB for OS on 24GB system)
+sp_configure 'max server memory', 20480;
+RECONFIGURE;
+
+-- Enable optimize for ad hoc workloads
+sp_configure 'optimize for ad hoc workloads', 1;
+RECONFIGURE;
+
+-- Set MAXDOP for OLTP workloads (TPROC-C)
+sp_configure 'max degree of parallelism', 1;
+RECONFIGURE;
 ```
 
 ## Troubleshooting
@@ -153,18 +268,5 @@ TPROCH_SCALE_FACTOR=1
 2. **BCP Errors**: Ensure BCP utility is installed and in PATH
 3. **Permission Errors**: Check database user has necessary permissions
 4. **Output Not Found**: Verify TMPDIR exists and is writable
+5. **Out of Memory**: Reduce warehouse count or scale factor
 
-## Performance Tips
-
-1. Use BCP for faster initial data loading (`USE_BCP=true`)
-2. Adjust virtual users based on CPU cores
-3. Use appropriate warehouse count for your hardware
-4. Enable columnstore indexes for TPC-H analytical workloads
-5. Set MAXDOP appropriately for your workload
-
-## Notes
-
-- All TPC-C references use the `TPROCC_` prefix
-- All TPC-H references use the `TPROCH_` prefix
-- Scripts validate required environment variables before execution
-- Results are written to timestamped files in TMPDIR
