@@ -22,7 +22,7 @@ if [[ "$BENCHMARK" == "tprocc" ]]; then
             SCRIPT_NAME="load_test_tprocc.tcl"
             ;;
         parse)
-            SCRIPT_NAME="parse_output.tcl"
+            SCRIPT_NAME="parse_output_tprocc.tcl"
             ;;
         *)
             echo "Unknown RUN_MODE: '$RUN_MODE' for benchmark '$BENCHMARK'. Exiting."

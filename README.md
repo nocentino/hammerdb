@@ -29,8 +29,7 @@ hammerdb/
 │   ├── build_schema_tproch.tcl    # Build TPC-H schema
 │   ├── load_test_tprocc.tcl       # Run TPC-C benchmark
 │   ├── load_test_tproch.tcl       # Run TPC-H benchmark
-│   ├── generic_tprocc_result.tcl  # Extract TPC-C results
-│   └── db_connection.tcl          # Shared database connection logic
+│   └── generic_tprocc_result.tcl  # Extract TPC-C results
 ├── output/                         # Test results directory (created automatically)
 └── README.md                       # This file
 ```
