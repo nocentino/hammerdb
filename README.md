@@ -85,5 +85,3 @@ chmod +x loadtest.sh
 ## Output Structure
 - Benchmark results: `./output/mssqls_tprocc*`, `./output/mssqls_tproch*`
 - BCP data files:
-  - TPC-C: `./output/bcp_data/tpcc/`
-  - TPC-H: `./output/bcp_data/tproch/`

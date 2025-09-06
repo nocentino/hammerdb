@@ -58,9 +58,9 @@ if {$tproc_h_clustered_columnstore eq "true"} {
 # Check if BCP option is enabled (now using common USE_BCP variable)
 if {[info exists ::env(USE_BCP)] && $::env(USE_BCP) eq "true"} {
     puts "Using BCP for data loading"
-    diset tpcc mssqls_use_bcp true
+    diset tpch mssqls_tpch_use_bcp true
 } else {
-    diset tpcc mssqls_use_bcp false
+    diset tpch mssqls_tpch_use_bcp false
     puts "Using standard data loading (BCP disabled)"
 }
 
