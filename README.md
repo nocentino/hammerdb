@@ -5,7 +5,7 @@ This repository contains automated HammerDB benchmark scripts for running TPC-C 
 ## Overview
 
 The scripts provide a streamlined way to:
-- Automatically set up SQL Server 2022 and 2025 containers
+- Automatically set up SQL Server 2025 container
 - Build TPC-C and TPC-H schemas
 - Run benchmark tests with configurable parameters
 - Extract and format test results
