@@ -303,29 +303,6 @@ To clean up volumes:
 docker volume rm sqldata_2022 sqldata_2025 sqlbackups
 ```
 
-## Troubleshooting
-
-1. **Container Already Exists**: 
-   ```bash
-   docker rm -f sql_2022 sql_2025
-   ```
-
-2. **Port Already in Use**: Check if ports 4000/4001 are available
-   ```bash
-   lsof -i :4000
-   lsof -i :4001
-   ```
-
-3. **Connection Issues**: 
-   - Wait 30-60 seconds after container start for SQL Server to initialize
-   - Verify SQL_SERVER_HOST matches the container port mapping
-
-4. **BCP Errors**: Ensure BCP utility is installed in the HammerDB container
-
-5. **Permission Errors**: Check database user has necessary permissions
-
-6. **Out of Memory**: Reduce warehouse count or scale factor
-
 ## Cleanup
 
 To completely clean up after testing:

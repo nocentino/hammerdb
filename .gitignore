@@ -1,5 +1,5 @@
 output/*
-hammerdb.env
+*.env
 hammerdb.code-workspace
 tpcc.bak
 tpch.bak
