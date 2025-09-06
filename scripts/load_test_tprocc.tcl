@@ -12,7 +12,7 @@ set tprocc_c_driver $::env(TPROC_C_DRIVER)
 set rampup $::env(RAMPUP)
 set duration $::env(DURATION)
 set total_iterations $::env(TOTAL_ITERATIONS)
-set tmpdir /tmp
+set tmpdir $::env(TMPDIR)
 
 # Add warehouse variable
 set warehouses $::env(WAREHOUSES)
@@ -54,8 +54,6 @@ diset tpcc mssqls_total_iterations $total_iterations
 diset tpcc mssqls_rampup $rampup
 diset tpcc mssqls_duration $duration
 diset tpcc mssqls_maxdop $mssqls_maxdop
-diset tpcc mssqls_checkpoint false
-diset tpcc mssqls_timeprofile true
 diset tpcc mssqls_allwarehouse true
 diset tpcc mssqls_count_ware $warehouses
 

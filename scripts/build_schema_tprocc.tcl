@@ -20,7 +20,7 @@ foreach var {USERNAME PASSWORD SQL_SERVER_HOST TPCC_DATABASE_NAME WAREHOUSES} {
 # Database connection parameters
 source [file join [file dirname [info script]] "db_connection.tcl"]
 
-# Initialize HammerDB
+# Initialize HammerDB 
 puts "SETTING UP TPCC SCHEMA BUILD"
 dbset db mssqls
 
