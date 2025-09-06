@@ -19,7 +19,7 @@
 echo "Pulling SQL Server Docker images..."
 docker pull mcr.microsoft.com/mssql/server:2025-RC0-ubuntu-24.04
 
-echo "Starting SQL Server 2025 RC container on port 4001..."
+echo "Starting SQL Server 2025 RC0 container on port 4001..."
 docker run \
     --env 'ACCEPT_EULA=Y' \
     --env 'MSSQL_SA_PASSWORD=S0methingS@Str0ng!' \

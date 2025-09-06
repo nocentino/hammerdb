@@ -221,15 +221,15 @@ TPROCC_DRIVER=mssqls
 
 # TPROC-C Build settings
 TPROCC_BUILD_VIRTUAL_USERS=4    # Half your cores for parallel loading
-WAREHOUSES=50                    # ~5GB database, fits in memory
+WAREHOUSES=50                   
 TPROCC_DRIVER_TYPE=timed
 TPROCC_ALLWAREHOUSE=true
 
 # TPROC-C Test settings  
-VIRTUAL_USERS=16                 # 2x cores, can increase to 24-32
+VIRTUAL_USERS=16                # 2x cores
 RAMPUP=2                        # 2 minutes to stabilize
 DURATION=10                     # 10 minutes for meaningful results
-TOTAL_ITERATIONS=10000000       # Effectively unlimited
+TOTAL_ITERATIONS=10000000   
 TPROCC_LOG_TO_TEMP=0
 TPROCC_USE_TRANSACTION_COUNTER=true
 TPROCC_CHECKPOINT=false
@@ -245,7 +245,7 @@ TPROCH_USE_CLUSTERED_COLUMNSTORE=true
 # TPROC-H Test settings
 TPROCH_VIRTUAL_USERS=4          # Lower for CPU-intensive queries
 TPROCH_TOTAL_QUERYSETS=1        # One complete run
-TPROCH_MAXDOP=8                 # Use all cores for queries
+TPROCH_MAXDOP=8                 
 TPROCH_LOG_TO_TEMP=1
 ```
 
@@ -273,15 +273,15 @@ TPROCC_DRIVER=mssqls
 
 # TPROC-C Build settings
 TPROCC_BUILD_VIRTUAL_USERS=2    # Half your cores
-WAREHOUSES=30                    # ~3GB database
+WAREHOUSES=30                   # ~3GB database
 TPROCC_DRIVER_TYPE=timed
 TPROCC_ALLWAREHOUSE=true
 
 # TPROC-C Test settings
-VIRTUAL_USERS=8                  # 2x cores
+VIRTUAL_USERS=8                 # 2x cores
 RAMPUP=2                        # 2 minutes to stabilize
 DURATION=10                     # 10 minutes for testing
-TOTAL_ITERATIONS=10000000       # Effectively unlimited
+TOTAL_ITERATIONS=10000000       
 TPROCC_LOG_TO_TEMP=0
 TPROCC_USE_TRANSACTION_COUNTER=true
 TPROCC_CHECKPOINT=false
@@ -325,12 +325,12 @@ TPROCC_DRIVER=mssqls
 
 # TPROC-C Build settings
 TPROCC_BUILD_VIRTUAL_USERS=8    # Half your cores
-WAREHOUSES=200                   # ~20GB database
+WAREHOUSES=200                  # ~20GB database
 TPROCC_DRIVER_TYPE=timed
 TPROCC_ALLWAREHOUSE=true
 
 # TPROC-C Test settings
-VIRTUAL_USERS=32                 # Start with 2x cores
+VIRTUAL_USERS=32                # Start with 2x cores
 RAMPUP=3                        # 3 minutes for larger scale
 DURATION=15                     # 15 minutes for stable results
 TOTAL_ITERATIONS=10000000       # Effectively unlimited
@@ -349,9 +349,25 @@ TPROCH_USE_CLUSTERED_COLUMNSTORE=true
 # TPROC-H Test settings
 TPROCH_VIRTUAL_USERS=8          # More parallelism
 TPROCH_TOTAL_QUERYSETS=1        # One complete run
-TPROCH_MAXDOP=16                # Use all cores
+TPROCH_MAXDOP=8                 # Use all cores
 TPROCH_LOG_TO_TEMP=1
 ```
+
+## Understanding the Results
+
+The framework automatically extracts key metrics, including:
+
+**TPC-C Output:**
+- Transactions Per Minute (TPM)
+- New Orders Per Minute (NOPM)
+- Response time percentiles
+
+**TPC-H Output:**
+- Individual query execution times
+- Total runtime for all 22 queries
+- Query-specific metrics
+
+Results are saved in both raw format (logs) and parsed format in the `output/` directory.
 
 
 ### Troubleshooting
