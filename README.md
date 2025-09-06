@@ -161,3 +161,10 @@ TPROCH_SCALE_FACTOR=1
 3. Use appropriate warehouse count for your hardware
 4. Enable columnstore indexes for TPC-H analytical workloads
 5. Set MAXDOP appropriately for your workload
+
+## Notes
+
+- All TPC-C references use the `TPROCC_` prefix
+- All TPC-H references use the `TPROCH_` prefix
+- Scripts validate required environment variables before execution
+- Results are written to timestamped files in TMPDIR

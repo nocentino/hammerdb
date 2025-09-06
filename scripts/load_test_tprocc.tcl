@@ -5,7 +5,6 @@ set password $::env(PASSWORD)
 set sql_server_host $::env(SQL_SERVER_HOST)
 
 # TPROC-C specific variables
-set mssqls_maxdop $::env(MSSQLS_MAXDOP)
 set virtual_users $::env(VIRTUAL_USERS)
 set tprocc_database_name $::env(TPROCC_DATABASE_NAME)
 set tprocc_driver $::env(TPROCC_DRIVER)
@@ -18,7 +17,6 @@ set tprocc_log_to_temp $::env(TPROCC_LOG_TO_TEMP)
 set tprocc_use_transaction_counter $::env(TPROCC_USE_TRANSACTION_COUNTER)
 set tprocc_checkpoint $::env(TPROCC_CHECKPOINT)
 set tprocc_timeprofile $::env(TPROCC_TIMEPROFILE)
-
 
 # Check if all required environment variables are set
 if {![info exists username] || ![info exists password] || ![info exists sql_server_host]} {
@@ -34,7 +32,6 @@ puts "  Virtual Users: $virtual_users"
 puts "  Duration: $duration minutes"
 puts "  Rampup: $rampup minutes"
 puts "  Total Iterations: $total_iterations"
-puts "  MAXDOP: $mssqls_maxdop"
 
 # Set up the database connection details for MSSQL
 dbset db $tprocc_driver
@@ -56,7 +53,6 @@ diset tpcc mssqls_driver timed
 diset tpcc mssqls_total_iterations $total_iterations
 diset tpcc mssqls_rampup $rampup
 diset tpcc mssqls_duration $duration
-diset tpcc mssqls_maxdop $mssqls_maxdop
 diset tpcc mssqls_allwarehouse true
 diset tpcc mssqls_count_ware $warehouses
 

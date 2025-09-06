@@ -19,6 +19,15 @@ foreach var {USERNAME PASSWORD SQL_SERVER_HOST TPROCC_DATABASE_NAME WAREHOUSES T
     }
 }
 
+# After loading environment variables, add debug output:
+puts "DEBUG: Environment variables loaded:"
+puts "  TPROCC_DATABASE_NAME: $tprocc_database_name"
+puts "  TPROCC_BUILD_VIRTUAL_USERS: $tprocc_build_virtual_users"
+puts "  WAREHOUSES: $warehouses"
+puts "  TPROCC_DRIVER_TYPE: $tprocc_driver_type"
+puts "  TPROCC_ALLWAREHOUSE: $tprocc_allwarehouse"
+puts "  USE_BCP: [expr {[info exists ::env(USE_BCP)] ? $::env(USE_BCP) : "not set"}]"
+
 # Database connection parameters
 source [file join [file dirname [info script]] "db_connection.tcl"]
 
