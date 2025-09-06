@@ -2,9 +2,9 @@
 set username $::env(USERNAME)
 set password $::env(PASSWORD)
 set sql_server_host $::env(SQL_SERVER_HOST)
-set tproc_h_database_name $::env(TPROC_H_DATABASE_NAME)
 
-# Load environment variables
+# TPC
+set tproc_h_database_name $::env(TPROC_H_DATABASE_NAME)
 set tproc_h_scale_factor $::env(TPROC_H_SCALE_FACTOR)
 set tproc_h_driver $::env(TPROC_H_DRIVER)
 set tproc_h_build_threads $::env(TPROC_H_BUILD_THREADS)
@@ -16,32 +16,6 @@ foreach var {USERNAME PASSWORD SQL_SERVER_HOST TPROC_H_DATABASE_NAME TPROC_H_SCA
         puts "Error: Environment variable $var is not set or empty"
         exit 1
     }
-}
-
-# Check if BCP option is enabled (now using common USE_BCP variable)
-if {[info exists ::env(USE_BCP)] && $::env(USE_BCP) eq "true"} {
-    set mssqls_use_bcp true
-    puts "Using BCP for data loading"
-    
-    # Set BCP files path
-    if {[info exists ::env(BCP_PATH)]} {
-        set mssqls_bcp_filespath "$::env(BCP_PATH)/tproch"
-        puts "Using BCP files path: $mssqls_bcp_filespath"
-    } else {
-        set mssqls_bcp_filespath "/tmp/bcp_data/tproch"
-        puts "Using default BCP files path: $mssqls_bcp_filespath"
-    }
-    
-    # Create the BCP directory if it doesn't exist
-    if {[catch {exec mkdir -p $mssqls_bcp_filespath} err]} {
-        puts "Warning: Could not create BCP directory: $err"
-    } else {
-        puts "BCP directory created/verified: $mssqls_bcp_filespath"
-    }
-} else {
-    set mssqls_use_bcp false
-    set mssqls_bcp_filespath ""
-    puts "Using standard data loading (BCP disabled)"
 }
 
 # Database connection parameters
@@ -81,10 +55,21 @@ if {$tproc_h_clustered_columnstore eq "true"} {
     diset tpch mssqls_colstore false
 }
 
-# Configure BCP options with correct key names
-if {$mssqls_use_bcp} {
-    diset tpch mssqls_tpch_use_bcp $mssqls_use_bcp
-    diset tpch mssqls_bcp_filespath $mssqls_bcp_filespath
+# Check if BCP option is enabled (now using common USE_BCP variable)
+if {[info exists ::env(USE_BCP)] && $::env(USE_BCP) eq "true"} {
+    puts "Using BCP for data loading"
+    diset tpcc mssqls_use_bcp true
+} else {
+    diset tpcc mssqls_use_bcp false
+    puts "Using standard data loading (BCP disabled)"
+}
+
+# Set MAXDOP if environment variable exists
+if {[info exists ::env(TPROC_H_MAXDOP)]} {
+    diset tpch mssqls_maxdop $::env(TPROC_H_MAXDOP)
+} else {
+    # Use default value of 2
+    diset tpch mssqls_maxdop 2
 }
 
 # Load the TPC-H script

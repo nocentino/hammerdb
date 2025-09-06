@@ -153,4 +153,4 @@ docker run -it --network host \
   -v $(pwd)/output/bcp_data_tpcc:/tmp/bcp_data_tpcc \
   -v $(pwd)/output/bcp_data_tproch:/tmp/bcp_data_tproch \
   --entrypoint /bin/bash \
-  hammerdb:latest
+  hammerdb-hammerdb:latest
