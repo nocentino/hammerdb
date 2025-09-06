@@ -6,6 +6,7 @@ set sql_server_host $::env(SQL_SERVER_HOST)
 
 # TPC-C variables
 set tpcc_database_name $::env(TPCC_DATABASE_NAME)
+set virtual_users $::env(VIRTUAL_USERS)
 set warehouses $::env(WAREHOUSES)
 
 # Validate required environment variables
@@ -36,7 +37,7 @@ diset connection mssqls_authentication sql
 
 # Configure TPC-C Schema Build
 diset tpcc mssqls_count_ware $warehouses
-diset tpcc mssqls_num_vu 1
+diset tpcc mssqls_num_vu $virtual_users
 diset tpcc mssqls_dbase $tpcc_database_name
 diset tpcc mssqls_driver timed
 diset tpcc mssqls_allwarehouse true

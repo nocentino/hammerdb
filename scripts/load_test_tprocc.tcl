@@ -3,13 +3,19 @@
 set username $::env(USERNAME)
 set password $::env(PASSWORD)
 set sql_server_host $::env(SQL_SERVER_HOST)
-set tpcc_database_name $::env(TPCC_DATABASE_NAME)
+
+# TPC-C specific variables
 set mssqls_maxdop $::env(MSSQLS_MAXDOP)
 set virtual_users $::env(VIRTUAL_USERS)
+set tpcc_database_name $::env(TPCC_DATABASE_NAME)
+set tprocc_c_driver $::env(TPROC_C_DRIVER)
 set rampup $::env(RAMPUP)
 set duration $::env(DURATION)
 set total_iterations $::env(TOTAL_ITERATIONS)
 set tmpdir /tmp
+
+# Add warehouse variable
+set warehouses $::env(WAREHOUSES)
 
 # Check if all required environment variables are set
 if {![info exists username] || ![info exists password] || ![info exists sql_server_host]} {
@@ -28,7 +34,7 @@ puts "  Total Iterations: $total_iterations"
 puts "  MAXDOP: $mssqls_maxdop"
 
 # Set up the database connection details for MSSQL
-dbset db mssqls
+dbset db $tprocc_c_driver
 
 # Set the benchmark to TPC-C
 dbset bm TPC-C
@@ -51,6 +57,7 @@ diset tpcc mssqls_maxdop $mssqls_maxdop
 diset tpcc mssqls_checkpoint false
 diset tpcc mssqls_timeprofile true
 diset tpcc mssqls_allwarehouse true
+diset tpcc mssqls_count_ware $warehouses
 
 # Configure test options and load scripts
 loadscript
