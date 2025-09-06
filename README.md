@@ -146,6 +146,58 @@ All configuration is managed through the `hammerdb.env` file. Copy and modify th
 
 Each configuration below provides a complete `hammerdb.env` file tailored for different hardware specifications. 
 
+### The smallest test you can run.
+
+Below is a configuration that provides the smallest possible test setup for quickly validating your environment. Use this when you want to verify everything is working correctly without waiting for lengthy database builds or extended test runs. This minimal setup creates a 100MB database and completes testing in under 5 minutes. This is what's included in the repository. More realistic examples are below in the readme. Update your `hammerdb.env` with these examples and modify them for your hardware.
+
+```bash
+# Database Connection
+USERNAME=sa
+PASSWORD=S0methingS@Str0ng!
+SQL_SERVER_HOST=localhost,4001
+
+# Common settings for all benchmarks
+USE_BCP=true
+TMPDIR=/tmp
+
+# Connection settings
+MSSQLS_TCP=true
+MSSQLS_AUTHENTICATION=sql
+
+# TPROC-C Configuration
+TPROCC_DATABASE_NAME=tpcc
+TPROCC_DRIVER=mssqls
+
+# TPROC-C Build settings
+TPROCC_BUILD_VIRTUAL_USERS=1
+WAREHOUSES=1
+TPROCC_DRIVER_TYPE=timed
+TPROCC_ALLWAREHOUSE=true
+
+# TPROC-C Test settings
+VIRTUAL_USERS=1
+RAMPUP=0
+DURATION=1
+TOTAL_ITERATIONS=10000000
+TPROCC_LOG_TO_TEMP=0
+TPROCC_USE_TRANSACTION_COUNTER=true
+TPROCC_CHECKPOINT=false
+TPROCC_TIMEPROFILE=true
+
+# TPROC-H Configuration
+TPROCH_DATABASE_NAME=tpch
+TPROCH_SCALE_FACTOR=1
+TPROCH_DRIVER=mssqls
+TPROCH_BUILD_THREADS=1
+TPROCH_USE_CLUSTERED_COLUMNSTORE=true
+
+# TPROC-H specific test settings
+TPROCH_VIRTUAL_USERS=1
+TPROCH_TOTAL_QUERYSETS=1
+TPROCH_MAXDOP=8
+TPROCH_LOG_TO_TEMP=1
+```
+
 ### 8-Core System with 24GB RAM 
 
 This configuration is optimized for a typical development/test workstation:
