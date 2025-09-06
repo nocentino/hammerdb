@@ -52,7 +52,7 @@ Edit `hammerdb.env` to match your requirements. See [Configuration](#configurati
 
 This environment consists of two main components: a 2025 test container, and a containerized HammerDB implementation. For a quick start, you can launch the SQL Server 2025 container and run the tests shown below. After familiarizing yourself with the test environment, you can modify `hammerdb.env` to target any SQL Server instance on your network by changing the `SQL_SERVER_HOST` environment variable and execute load tests against production or staging systems. Be sure to adjust the configuration parameters as documented in the Configuration section below.
 
-### Start SQL Server Containers
+### Start SQL Server Container
 
 **SQL Server 2025-RC0 on port 4001**
 
@@ -145,6 +145,8 @@ All configuration is managed through the `hammerdb.env` file. Copy and modify th
 
 ## Recommended Configuration for Different System Sizes
 
+Each configuration below provides a complete `hammerdb.env` file tailored for different hardware specifications. These configurations balance performance with system resources to achieve optimal benchmark results.
+
 ### 8-Core System with 24GB RAM (Recommended Defaults)
 
 This configuration is optimized for a typical development/test workstation:
@@ -159,6 +161,14 @@ SQL_SERVER_HOST=localhost,4001
 USE_BCP=true
 TMPDIR=/tmp
 
+# Connection settings
+MSSQLS_TCP=true
+MSSQLS_AUTHENTICATION=sql
+
+# TPROC-C Configuration
+TPROCC_DATABASE_NAME=tpcc
+TPROCC_DRIVER=mssqls
+
 # TPROC-C Build settings
 TPROCC_BUILD_VIRTUAL_USERS=4    # Half your cores for parallel loading
 WAREHOUSES=50                    # ~5GB database, fits in memory
@@ -170,11 +180,14 @@ VIRTUAL_USERS=16                 # 2x cores, can increase to 24-32
 RAMPUP=2                        # 2 minutes to stabilize
 DURATION=10                     # 10 minutes for meaningful results
 TOTAL_ITERATIONS=10000000       # Effectively unlimited
+TPROCC_LOG_TO_TEMP=0
 TPROCC_USE_TRANSACTION_COUNTER=true
 TPROCC_CHECKPOINT=false
 TPROCC_TIMEPROFILE=true
 
 # TPROC-H Configuration
+TPROCH_DATABASE_NAME=tpch
+TPROCH_DRIVER=mssqls
 TPROCH_SCALE_FACTOR=10          # 10GB dataset
 TPROCH_BUILD_THREADS=4          # Half your cores
 TPROCH_USE_CLUSTERED_COLUMNSTORE=true
@@ -183,122 +196,109 @@ TPROCH_USE_CLUSTERED_COLUMNSTORE=true
 TPROCH_VIRTUAL_USERS=4          # Lower for CPU-intensive queries
 TPROCH_TOTAL_QUERYSETS=1        # One complete run
 TPROCH_MAXDOP=8                 # Use all cores for queries
+TPROCH_LOG_TO_TEMP=1
 ```
 
 ### 4-Core System with 16GB RAM
 
+Optimized for smaller development systems or cloud instances:
+
 ```bash
-TPROCC_BUILD_VIRTUAL_USERS=2
+# Database Connection
+USERNAME=sa
+PASSWORD=S0methingS@Str0ng!
+SQL_SERVER_HOST=localhost,4001
+
+# Common settings for all benchmarks
+USE_BCP=true
+TMPDIR=/tmp
+
+# Connection settings
+MSSQLS_TCP=true
+MSSQLS_AUTHENTICATION=sql
+
+# TPROC-C Configuration
+TPROCC_DATABASE_NAME=tpcc
+TPROCC_DRIVER=mssqls
+
+# TPROC-C Build settings
+TPROCC_BUILD_VIRTUAL_USERS=2    # Half your cores
 WAREHOUSES=30                    # ~3GB database
+TPROCC_DRIVER_TYPE=timed
+TPROCC_ALLWAREHOUSE=true
+
+# TPROC-C Test settings
 VIRTUAL_USERS=8                  # 2x cores
-TPROCH_SCALE_FACTOR=5            # 5GB dataset
-TPROCH_BUILD_THREADS=2
-TPROCH_VIRTUAL_USERS=2
-TPROCH_MAXDOP=4
+RAMPUP=2                        # 2 minutes to stabilize
+DURATION=10                     # 10 minutes for testing
+TOTAL_ITERATIONS=10000000       # Effectively unlimited
+TPROCC_LOG_TO_TEMP=0
+TPROCC_USE_TRANSACTION_COUNTER=true
+TPROCC_CHECKPOINT=false
+TPROCC_TIMEPROFILE=true
+
+# TPROC-H Configuration
+TPROCH_DATABASE_NAME=tpch
+TPROCH_DRIVER=mssqls
+TPROCH_SCALE_FACTOR=5           # 5GB dataset
+TPROCH_BUILD_THREADS=2          # Half your cores
+TPROCH_USE_CLUSTERED_COLUMNSTORE=true
+
+# TPROC-H Test settings
+TPROCH_VIRTUAL_USERS=2          # Conservative for small systems
+TPROCH_TOTAL_QUERYSETS=1        # One complete run
+TPROCH_MAXDOP=4                 # Use all cores
+TPROCH_LOG_TO_TEMP=1
 ```
 
 ### 16-Core System with 64GB RAM
 
+Configuration for production-grade servers or high-performance workstations:
+
 ```bash
-TPROCC_BUILD_VIRTUAL_USERS=8
+# Database Connection
+USERNAME=sa
+PASSWORD=S0methingS@Str0ng!
+SQL_SERVER_HOST=localhost,4001
+
+# Common settings for all benchmarks
+USE_BCP=true
+TMPDIR=/tmp
+
+# Connection settings
+MSSQLS_TCP=true
+MSSQLS_AUTHENTICATION=sql
+
+# TPROC-C Configuration
+TPROCC_DATABASE_NAME=tpcc
+TPROCC_DRIVER=mssqls
+
+# TPROC-C Build settings
+TPROCC_BUILD_VIRTUAL_USERS=8    # Half your cores
 WAREHOUSES=200                   # ~20GB database
+TPROCC_DRIVER_TYPE=timed
+TPROCC_ALLWAREHOUSE=true
+
+# TPROC-C Test settings
 VIRTUAL_USERS=32                 # Start with 2x cores
-TPROCH_SCALE_FACTOR=30           # 30GB dataset
-TPROCH_BUILD_THREADS=8
-TPROCH_VIRTUAL_USERS=8
-TPROCH_MAXDOP=16
-```
+RAMPUP=3                        # 3 minutes for larger scale
+DURATION=15                     # 15 minutes for stable results
+TOTAL_ITERATIONS=10000000       # Effectively unlimited
+TPROCC_LOG_TO_TEMP=0
+TPROCC_USE_TRANSACTION_COUNTER=true
+TPROCC_CHECKPOINT=false
+TPROCC_TIMEPROFILE=true
 
-## Performance Tuning Guidelines
+# TPROC-H Configuration
+TPROCH_DATABASE_NAME=tpch
+TPROCH_DRIVER=mssqls
+TPROCH_SCALE_FACTOR=30          # 30GB dataset
+TPROCH_BUILD_THREADS=8          # Half your cores
+TPROCH_USE_CLUSTERED_COLUMNSTORE=true
 
-### System Sizing Formula
-
-1. **Warehouse Count**: 
-   - Formula: `(Available RAM in GB - 8) / 0.1`
-   - Example: 24GB RAM = (24-8)/0.1 = 160 max warehouses
-   - Recommendation: Use 30-50% of max for headroom
-
-2. **Virtual Users (TPROC-C)**:
-   - Start: 2x CPU cores
-   - Maximum: 4x CPU cores
-   - Adjust based on CPU utilization
-
-3. **TPC-H Scale Factor**:
-   - Formula: `(Available RAM in GB - 8) / 2`
-   - Ensures dataset can be cached effectively
-
-### Monitoring During Tests
-
-1. **CPU Utilization**:
-   - TPROC-C: Target 70-90%
-   - TPROC-H: Expect near 100% during query execution
-
-2. **Memory Usage**:
-   - Should stay below 90% of total RAM
-   - Monitor SQL Server buffer cache hit ratio (>95%)
-
-3. **Disk I/O**:
-   - Minimal during steady-state for properly sized tests
-   - High I/O indicates insufficient memory
-
-## Output Files
-
-Test results are saved in the `output/` directory:
-
-- **TPC-C results**: `output/mssqls_tprocc_<jobid>.out`
-- **TPC-H results**: `output/mssqls_tproch_<jobid>.out`
-
-The output files contain:
-- Transaction response times
-- Transaction counts
-- Overall benchmark results (TPM for TPC-C, query times for TPC-H)
-
-When running successive tests, TPC-C results are automatically backed up to timestamped directories.
-
-## SQL Server Configuration
-
-For optimal performance, configure SQL Server with:
-
-```sql
--- Set max server memory (leave 4GB for OS on 24GB system)
-sp_configure 'max server memory', 20480;
-RECONFIGURE;
-
--- Enable optimize for ad hoc workloads
-sp_configure 'optimize for ad hoc workloads', 1;
-RECONFIGURE;
-
--- Set MAXDOP for OLTP workloads (TPROC-C)
-sp_configure 'max degree of parallelism', 1;
-RECONFIGURE;
-```
-
-## Docker Volume Management
-
-The script creates persistent volumes for SQL Server data:
-- `sqldata_2022`: SQL Server 2022 data files
-- `sqldata_2025`: SQL Server 2025 data files
-- `sqlbackups`: Shared backup directory
-
-To clean up volumes:
-```bash
-docker volume rm sqldata_2022 sqldata_2025 sqlbackups
-```
-
-## Cleanup
-
-To completely clean up after testing:
-
-```bash
-# Stop and remove containers
-docker-compose down
-
-# Remove SQL Server containers
-docker rm -f sql_2022 sql_2025
-
-# Remove volumes (WARNING: This deletes all data)
-docker volume rm sqldata_2022 sqldata_2025 sqlbackups
-
-# Clean output directory
-rm -rf output/*
+# TPROC-H Test settings
+TPROCH_VIRTUAL_USERS=8          # More parallelism
+TPROCH_TOTAL_QUERYSETS=1        # One complete run
+TPROCH_MAXDOP=16                # Use all cores
+TPROCH_LOG_TO_TEMP=1
 ```
