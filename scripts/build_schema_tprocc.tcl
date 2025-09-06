@@ -47,17 +47,30 @@ if {[info exists ::env(USE_BCP)] && $::env(USE_BCP) eq "true"} {
     
     # Set BCP files path
     if {[info exists ::env(BCP_PATH)]} {
-        set mssqls_bcp_filespath "$::env(BCP_PATH)/tproch"
+        set mssqls_bcp_filespath "$::env(BCP_PATH)/tpcc"
         puts "Using BCP files path: $mssqls_bcp_filespath"
     } else {
-        set mssqls_bcp_filespath "/tmp/bcp_data/tproch"
+        set mssqls_bcp_filespath "/tmp/bcp_data/tpcc"
         puts "Using default BCP files path: $mssqls_bcp_filespath"
+    }
+    
+    # Create the BCP directory if it doesn't exist
+    if {[catch {exec mkdir -p $mssqls_bcp_filespath} err]} {
+        puts "Warning: Could not create BCP directory: $err"
+    } else {
+        puts "BCP directory created/verified: $mssqls_bcp_filespath"
     }
 } else {
     set mssqls_use_bcp false
+    set mssqls_bcp_filespath ""
     puts "Using standard data loading (BCP disabled)"
 }
 
+# Configure BCP options
+diset tpcc mssqls_use_bcp $mssqls_use_bcp
+if {$mssqls_use_bcp} {
+    diset tpcc mssqls_bcp_filespath $mssqls_bcp_filespath
+}
 
 # Load the TPC-C script
 loadscript
