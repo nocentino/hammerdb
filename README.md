@@ -54,8 +54,9 @@ This environment consists of two main components: a 2025 test container, and a c
 
 ### Start SQL Server Containers
 
-SQL Server 2025-RC0 on port 4001
+**SQL Server 2025-RC0 on port 4001**
 
+```
 docker run \
     --env 'ACCEPT_EULA=Y' \
     --env 'MSSQL_SA_PASSWORD=S0methingS@Str0ng!' \
