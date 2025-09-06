@@ -9,11 +9,7 @@
 #
 # Prerequisites:
 # - Docker and Docker Compose installed
-# - SQL Server containers running on ports 4000 (2022) and 4001 (2025)
 # - Properly configured hammerdb.env file
-#
-# Usage:
-#   ./loadtest.sh
 #
 
 # ============================

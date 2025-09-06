@@ -47,35 +47,12 @@ cd hammerdb
 ### 2. Configure your test parameters
 Edit `hammerdb.env` to match your requirements. See [Configuration](#configuration) section for details.
 
-### 3. Run the complete benchmark suite
-```bash
-chmod +x loadtest.sh
-./loadtest.sh
-```
 
-This script will:
-1. Pull SQL Server Docker images (2022 and 2025-RC0)
-2. Start SQL Server containers on ports 4000 and 4001
-3. Build and run TPC-C benchmarks
-4. Build and run TPC-H benchmarks
-5. Save results to the `output/` directory
+## 3. Running Individual Components
 
-## Running Individual Components
-
-If you prefer to run components separately:
+This environment consists of three main components: SQL Server 2022 and 2025 test containers, and a containerized HammerDB implementation. For a quick start, you can launch the SQL Server 2025 container and run the tests shown below. After familiarizing yourself with the test environment, you can modify `hammerdb.env` to target any SQL Server instance on your network by changing the `SQL_SERVER_HOST` environment variable and execute load tests against production or staging systems. Be sure to adjust the configuration parameters as documented in the Configuration section below.
 
 ### Start SQL Server Containers
-```bash
-# SQL Server 2022 on port 4000
-docker run \
-    --env 'ACCEPT_EULA=Y' \
-    --env 'MSSQL_SA_PASSWORD=S0methingS@Str0ng!' \
-    --name 'sql_2022' \
-    --volume sqldata_2022:/var/opt/mssql \
-    --publish 4000:1433 \
-    --platform=linux/amd64 \
-    --detach mcr.microsoft.com/mssql/server:2022-latest
-
 # SQL Server 2025-RC0 on port 4001
 docker run \
     --env 'ACCEPT_EULA=Y' \
@@ -88,6 +65,8 @@ docker run \
 ```
 
 ### Run HammerDB Tests with Docker Compose
+
+The HammerDB test execution is orchestrated through Docker Compose using environment variables to control the test mode and benchmark type. Each benchmark follows a three-phase process: schema building, load testing, and results parsing. The `RUN_MODE` variable determines which phase to execute (build, load, or parse), while the `BENCHMARK` variable specifies whether to run TPC-C (tprocc) or TPC-H (tproch) workloads. This modular approach allows you to run specific test phases independently or chain them together for complete benchmark execution.
 
 ```bash
 # TPC-C Schema Build
@@ -320,12 +299,3 @@ docker volume rm sqldata_2022 sqldata_2025 sqlbackups
 # Clean output directory
 rm -rf output/*
 ```
-
-## Notes
-
-- The script automatically handles SQL Server container lifecycle
-- Results are preserved between runs in the `output/` directory
-- All TPC-C references use the `TPROCC_` prefix
-- All TPC-H references use the `TPROCH_` prefix
-- Default configuration tests against SQL Server 2025-RC0 on port 4001
-
