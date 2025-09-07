@@ -48,18 +48,18 @@ cp hammerdb.env.example hammerdb.env
 ./loadtest.sh
 ```
 
-### 2. Configure your test parameters
+## Configure your test parameters
 
 Once you have the environment up and running, now its time to customize it for your environment.  Edit `hammerdb.env` to match your requirements. See [Configuration](#configuration) section for details.
 
 
-## 3. Running Individual Components
+## Running Individual Components
 
 This environment consists of two main components: a 2025 test container, and a containerized HammerDB implementation. For a quick start, you can launch the SQL Server 2025 container and run the tests shown below. After familiarizing yourself with the test environment, you can modify `hammerdb.env` to target any SQL Server instance on your network by changing the `SQL_SERVER_HOST` environment variable and execute load tests against production or staging systems. Be sure to adjust the configuration parameters as documented in the [Configuration](#configuration) section below.
 
 ### Start SQL Server Container
 
-**SQL Server 2025-RC0 on port 4001**
+**SQL Server 2025 RC0 on port 4001**
 
 ```
 docker run \
