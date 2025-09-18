@@ -1,4 +1,9 @@
 #!/bin/bash
+# filepath: /Users/anocentino/Documents/GitHub/hammerdb/entrypoint.sh
+
+# Force unbuffered output
+export PYTHONUNBUFFERED=1
+stty -onlcr 2>/dev/null || true
 
 # Ensure all required environment variables are set
 if [ -z "$USERNAME" ] || [ -z "$PASSWORD" ] || [ -z "$SQL_SERVER_HOST" ] || [ -z "$BENCHMARK" ]; then
@@ -56,5 +61,5 @@ if [ ! -f "/opt/HammerDB-5.0/scripts/$SCRIPT_NAME" ]; then
   exit 1
 fi
 
-# Run the specified HammerDB script
-/opt/HammerDB-5.0/hammerdbcli auto /opt/HammerDB-5.0/scripts/$SCRIPT_NAME
+# Run the specified HammerDB script with unbuffered output
+exec /opt/HammerDB-5.0/hammerdbcli auto /opt/HammerDB-5.0/scripts/$SCRIPT_NAME 2>&1

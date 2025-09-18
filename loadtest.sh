@@ -52,7 +52,7 @@ echo "Step 2: Running TPC-C load test..."
 RUN_MODE=load BENCHMARK=tprocc docker compose up
 
 echo "Step 3: Parsing TPC-C test results..."
-RUN_MODE=parse BENCHMARK=tprocc docker compose up
+docker compose run --rm --no-TTY -e RUN_MODE=parse -e BENCHMARK=tprocc hammerdb
 
 echo ""
 echo "=== TPC-H BENCHMARK TESTS ==="
@@ -67,7 +67,7 @@ echo "Step 2: Running TPC-H load test..."
 RUN_MODE=load BENCHMARK=tproch docker compose up
 
 echo "Step 3: Parsing TPC-H test results..."
-RUN_MODE=parse BENCHMARK=tproch docker compose up
+docker compose run --rm --no-TTY -e RUN_MODE=parse -e BENCHMARK=tproch hammerdb
 
 # ============================
 # CLEANUP OPERATIONS

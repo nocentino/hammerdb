@@ -1,3 +1,4 @@
 output/*
 hammerdb.code-workspace
 *.bak
+hammerdb.env
