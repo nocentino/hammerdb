@@ -69,7 +69,7 @@ docker run \
     --volume sqldata_2025:/var/opt/mssql \
     --publish 4001:1433 \
     --platform=linux/amd64 \
-    --detach mcr.microsoft.com/mssql/server:2025-RC0-ubuntu-24.04
+    --detach mcr.microsoft.com/mssql/server:2025-RC1-ubuntu-24.04
 ```
 
 ### Run HammerDB Tests with Docker Compose
