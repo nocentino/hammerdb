@@ -2,6 +2,8 @@
 
 This repository contains automated HammerDB benchmark scripts for running TPC-C (TPROC-C) and TPC-H (TPROC-H) workloads against Microsoft SQL Server using Docker containers.
 
+Full blog post here: [https://www.nocentino.com/posts/2025-09-06-hammerdb-containers/](https://www.nocentino.com/posts/2025-09-06-hammerdb-containers/)
+
 ## Overview
 
 The scripts provide a streamlined way to:
