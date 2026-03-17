@@ -17,7 +17,7 @@
 # ============================
 
 echo "Pulling SQL Server Docker images..."
-docker pull mcr.microsoft.com/mssql/server:2025-RC1-ubuntu-24.04
+docker pull mcr.microsoft.com/mssql/server:2025-CU3-ubuntu-22.04
 
 echo "Starting SQL Server 2025 RC1 container on port 4001..."
 docker run \
@@ -28,7 +28,7 @@ docker run \
     --volume sqlbackups:/var/opt/mssql/backups \
     --publish 4001:1433 \
     --platform=linux/amd64 \
-    --detach mcr.microsoft.com/mssql/server:2025-RC1-ubuntu-24.04
+    --detach mcr.microsoft.com/mssql/server:2025-CU3-ubuntu-22.04
 
 echo "Waiting for SQL Server containers to start up..."
 sleep 30
@@ -38,7 +38,7 @@ sleep 30
 # ============================
 
 echo "Validating Docker Compose configuration..."
-docker-compose config
+HAMMERDB_ENV_FILE=hammerdb.env docker compose config
 
 echo ""
 echo "=== TPC-C BENCHMARK TESTS ==="
@@ -46,13 +46,13 @@ echo "TPC-C simulates an OLTP environment with complex transactions"
 echo ""
 
 echo "Step 1: Building TPC-C schema..."
-RUN_MODE=build BENCHMARK=tprocc docker compose up
+HAMMERDB_ENV_FILE=hammerdb.env RUN_MODE=build BENCHMARK=tprocc docker compose up
 
 echo "Step 2: Running TPC-C load test..."
-RUN_MODE=load BENCHMARK=tprocc docker compose up
+HAMMERDB_ENV_FILE=hammerdb.env RUN_MODE=load BENCHMARK=tprocc docker compose up
 
 echo "Step 3: Parsing TPC-C test results..."
-docker compose run --rm --no-TTY -e RUN_MODE=parse -e BENCHMARK=tprocc hammerdb
+HAMMERDB_ENV_FILE=hammerdb.env docker compose run --rm --no-TTY -e RUN_MODE=parse -e BENCHMARK=tprocc hammerdb
 
 echo ""
 echo "=== TPC-H BENCHMARK TESTS ==="
@@ -61,13 +61,13 @@ echo ""
 
 
 echo "Step 1: Building TPC-H schema..."
-RUN_MODE=build BENCHMARK=tproch docker compose up
+HAMMERDB_ENV_FILE=hammerdb.env RUN_MODE=build BENCHMARK=tproch docker compose up
 
 echo "Step 2: Running TPC-H load test..."
-RUN_MODE=load BENCHMARK=tproch docker compose up
+HAMMERDB_ENV_FILE=hammerdb.env RUN_MODE=load BENCHMARK=tproch docker compose up
 
 echo "Step 3: Parsing TPC-H test results..."
-docker compose run --rm --no-TTY -e RUN_MODE=parse -e BENCHMARK=tproch hammerdb
+HAMMERDB_ENV_FILE=hammerdb.env docker compose run --rm --no-TTY -e RUN_MODE=parse -e BENCHMARK=tproch hammerdb
 
 # ============================
 # CLEANUP OPERATIONS
@@ -78,7 +78,7 @@ echo "=== CLEANUP ==="
 echo ""
 
 echo "Stopping HammerDB containers..."
-docker-compose down
+HAMMERDB_ENV_FILE=hammerdb.env docker compose down
 
 echo "Removing HammerDB containers and images (optional - uncomment to enable)..."
 # docker-compose down --rmi local --volumes

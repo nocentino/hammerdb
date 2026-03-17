@@ -8,11 +8,10 @@ services:
           platforms:
             - linux/amd64
         env_file:
-          - hammerdb.env
+          - ${HAMMERDB_ENV_FILE}
         environment:
           - RUN_MODE
           - BENCHMARK
-          - TMP=/tmp
         volumes:
           - ./scripts:/opt/HammerDB-5.0/scripts
           - ./output:/tmp
