@@ -3,7 +3,7 @@
 set username $::env(USERNAME)
 set password $::env(PASSWORD)
 set sql_server_host $::env(SQL_SERVER_HOST)
-set tmpdir $::env(TMPDIR)
+set tmpdir $::env(TMP)
 
 # TPROC-H specific variables
 set tproch_driver $::env(TPROCH_DRIVER)

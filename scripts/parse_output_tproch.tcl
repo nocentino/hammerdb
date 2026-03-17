@@ -8,7 +8,7 @@ proc getjobid {filename} {
 }
 
 # Main script execution
-set tmpdir $::env(TMPDIR)
+set tmpdir $::env(TMP)
 set ::outputfile  $tmpdir/mssqls_tproch
 set filename $::outputfile
 set jobid [getjobid $filename]

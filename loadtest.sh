@@ -16,7 +16,7 @@
 # SQL SERVER CONTAINER SETUP
 # ============================
 
-echo "Starting SQL Server 2025 CU2 container on port 4001..."
+echo "Starting SQL Server 2025 CU3 container on port 4001..."
 docker run \
     --env 'ACCEPT_EULA=Y' \
     --env 'MSSQL_SA_PASSWORD=S0methingS@Str0ng!' \
@@ -83,3 +83,4 @@ echo "Cleaning up output directory (optional - uncomment to enable)..."
 # sudo rm -rf output
 
 docker rm -f sql2025
+docker volume rm sqldata_2025 
