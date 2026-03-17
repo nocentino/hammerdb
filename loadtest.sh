@@ -16,23 +16,44 @@
 # SQL SERVER CONTAINER SETUP
 # ============================
 
-echo "Pulling SQL Server Docker images..."
-docker pull mcr.microsoft.com/mssql/server:2025-RC1-ubuntu-24.04
-
 echo "Starting SQL Server 2025 RC1 container on port 4001..."
 docker run \
     --env 'ACCEPT_EULA=Y' \
     --env 'MSSQL_SA_PASSWORD=S0methingS@Str0ng!' \
-    --name 'sql_2025' \
+    --name 'sql2025' \
+    --hostname 'sql2025' \
     --volume sqldata_2025:/var/opt/mssql \
     --volume sqlbackups:/var/opt/mssql/backups \
     --publish 4001:1433 \
     --platform=linux/amd64 \
+    --detach mcr.microsoft.com/mssql/server:2025-RC1-ubuntu-22.04
+
+echo "Starting SQL Server 2025 RC1 on Ubuntu 24 container on port 4002..."
+docker run \
+    --env 'ACCEPT_EULA=Y' \
+    --env 'MSSQL_SA_PASSWORD=S0methingS@Str0ng!' \
+    --name 'sql202524' \
+    --hostname 'sql202524' \
+    --volume sqldata_2025_24:/var/opt/mssql \
+    --volume sqlbackups:/var/opt/mssql/backups \
+    --publish 4002:1433 \
+    --platform=linux/amd64 \
     --detach mcr.microsoft.com/mssql/server:2025-RC1-ubuntu-24.04
 
-echo "Waiting for SQL Server containers to start up..."
-sleep 30
+echo "Starting SQL Server 2022 container on port 4002..."
+docker run \
+    --env 'ACCEPT_EULA=Y' \
+    --env 'MSSQL_SA_PASSWORD=S0methingS@Str0ng!' \
+    --name 'sql2022' \
+    --hostname 'sql2022' \
+    --volume sqldata_2022:/var/opt/mssql \
+    --volume sqlbackups:/var/opt/mssql/backups \
+    --publish 4003:1433 \
+    --platform=linux/amd64 \
+    --detach mcr.microsoft.com/mssql/server:2022-CU21-ubuntu-22.04
 
+
+    
 # ============================
 # HAMMERDB TEST EXECUTION
 # ============================
@@ -78,11 +99,12 @@ echo "=== CLEANUP ==="
 echo ""
 
 echo "Stopping HammerDB containers..."
-docker-compose down
+docker compose down
 
 echo "Removing HammerDB containers and images (optional - uncomment to enable)..."
-# docker-compose down --rmi local --volumes
+# docker compose down --rmi local --volumes
 
 echo "Cleaning up output directory (optional - uncomment to enable)..."
 # sudo rm -rf output
 
+docker rm -f sql2025 sql202524 sql2022
