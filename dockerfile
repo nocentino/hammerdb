@@ -6,7 +6,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 # Install packages, configure shell and clean up cache
 RUN apt-get update && \
-    apt-get install -y apt-transport-https curl gnupg2 wget python3 vim && \
+    apt-get install -y apt-transport-https curl gnupg2 wget python3 && \
     curl -sSL -O https://packages.microsoft.com/config/ubuntu/24.04/packages-microsoft-prod.deb && \
     dpkg -i packages-microsoft-prod.deb && rm packages-microsoft-prod.deb && \
     apt-get update && ACCEPT_EULA=Y apt-get install -y mssql-tools18 msodbcsql18 unixodbc unixodbc-dev && \
@@ -19,7 +19,8 @@ RUN apt-get update && \
 # Install configure HammerDB-v5.0...change this to get the latest
 WORKDIR /opt
 RUN wget https://github.com/TPC-Council/HammerDB/releases/download/v5.0/HammerDB-5.0-Prod-Lin-UBU24.tar.gz && \
-    tar -xvzf HammerDB-5.0-Prod-Lin-UBU24.tar.gz && ls && \
+    tar -xzf HammerDB-5.0-Prod-Lin-UBU24.tar.gz && \
+    rm HammerDB-5.0-Prod-Lin-UBU24.tar.gz && \
     echo 'export LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu/:$LD_LIBRARY_PATH'  >> ~/.bashrc
 
 

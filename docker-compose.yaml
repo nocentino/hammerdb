@@ -15,4 +15,3 @@ services:
         volumes:
           - ./scripts:/opt/HammerDB-5.0/scripts
           - ./output:/tmp
-        command: ["/entrypoint.sh"]

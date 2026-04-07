@@ -1,3 +1,4 @@
+#!/bin/bash
 # TPC-C Load Test - SQL Server 2022
 HAMMERDB_ENV_FILE=hammerdb-2022.env RUN_MODE=load BENCHMARK=tprocc docker compose up
 

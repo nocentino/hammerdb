@@ -2,7 +2,6 @@
 # filepath: /Users/anocentino/Documents/GitHub/hammerdb/entrypoint.sh
 
 # Force unbuffered output
-export PYTHONUNBUFFERED=1
 stty -onlcr 2>/dev/null || true
 
 # Ensure all required environment variables are set

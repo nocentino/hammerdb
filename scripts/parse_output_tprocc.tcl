@@ -15,7 +15,7 @@ proc getoutput {filename} {
 }
 
 # Main script execution
-set tmpdir /tmp
+set tmpdir $::env(TMP)
 set ::outputfile  $tmpdir/mssqls_tprocc
 set filename $::outputfile
 set jobid [getjobid $filename]

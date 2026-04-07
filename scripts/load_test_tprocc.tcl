@@ -1,4 +1,12 @@
 #!/bin/tclsh
+# Validate required environment variables before use
+foreach var {USERNAME PASSWORD SQL_SERVER_HOST VIRTUAL_USERS TPROCC_DATABASE_NAME TPROCC_DRIVER RAMPUP DURATION TOTAL_ITERATIONS TMP WAREHOUSES TPROCC_ALLWAREHOUSE} {
+    if {![info exists ::env($var)] || $::env($var) eq ""} {
+        puts "Error: Environment variable $var is not set or empty."
+        exit 1
+    }
+}
+
 # Fetch environment variables for SQL Server connection
 set username $::env(USERNAME)
 set password $::env(PASSWORD)
@@ -13,16 +21,11 @@ set duration $::env(DURATION)
 set total_iterations $::env(TOTAL_ITERATIONS)
 set tmpdir $::env(TMP)
 set warehouses $::env(WAREHOUSES)
+set tprocc_allwarehouse $::env(TPROCC_ALLWAREHOUSE)
 set tprocc_log_to_temp $::env(TPROCC_LOG_TO_TEMP)
 set tprocc_use_transaction_counter $::env(TPROCC_USE_TRANSACTION_COUNTER)
 set tprocc_checkpoint $::env(TPROCC_CHECKPOINT)
 set tprocc_timeprofile $::env(TPROCC_TIMEPROFILE)
-
-# Check if all required environment variables are set
-if {![info exists username] || ![info exists password] || ![info exists sql_server_host]} {
-    puts "Error: Environment variables USERNAME, PASSWORD, and SQL_SERVER_HOST must be set."
-    exit
-}
 
 # Initialize HammerDB
 puts "SETTING UP TPROC-C LOAD TEST"
@@ -53,7 +56,11 @@ diset tpcc mssqls_driver timed
 diset tpcc mssqls_total_iterations $total_iterations
 diset tpcc mssqls_rampup $rampup
 diset tpcc mssqls_duration $duration
-diset tpcc mssqls_allwarehouse true
+if {$tprocc_allwarehouse eq "true"} {
+    diset tpcc mssqls_allwarehouse true
+} else {
+    diset tpcc mssqls_allwarehouse false
+}
 diset tpcc mssqls_count_ware $warehouses
 
 # Set checkpoint and timeprofile if they are true

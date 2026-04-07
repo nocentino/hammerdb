@@ -1,4 +1,12 @@
 #!/bin/tclsh
+# Validate required environment variables before use
+foreach var {USERNAME PASSWORD SQL_SERVER_HOST TPROCC_DATABASE_NAME WAREHOUSES TPROCC_BUILD_VIRTUAL_USERS TPROCC_DRIVER} {
+    if {![info exists ::env($var)] || $::env($var) eq ""} {
+        puts "Error: Environment variable $var is not set or empty"
+        exit 1
+    }
+}
+
 # Load environment variables
 set username $::env(USERNAME)
 set password $::env(PASSWORD)
@@ -8,29 +16,23 @@ set sql_server_host $::env(SQL_SERVER_HOST)
 set tprocc_database_name $::env(TPROCC_DATABASE_NAME)
 set tprocc_build_virtual_users $::env(TPROCC_BUILD_VIRTUAL_USERS)
 set warehouses $::env(WAREHOUSES)
+set tprocc_driver $::env(TPROCC_DRIVER)
 set tprocc_driver_type $::env(TPROCC_DRIVER_TYPE)
 set tprocc_allwarehouse $::env(TPROCC_ALLWAREHOUSE)
 
-# Validate required environment variables
-foreach var {USERNAME PASSWORD SQL_SERVER_HOST TPROCC_DATABASE_NAME WAREHOUSES TPROCC_BUILD_VIRTUAL_USERS} {
-    if {![info exists ::env($var)] || $::env($var) eq ""} {
-        puts "Error: Environment variable $var is not set or empty"
-        exit 1
-    }
-}
-
-# After loading environment variables, add debug output:
-puts "DEBUG: Environment variables loaded:"
+# Print loaded configuration
+puts "Environment variables loaded:"
 puts "  TPROCC_DATABASE_NAME: $tprocc_database_name"
 puts "  TPROCC_BUILD_VIRTUAL_USERS: $tprocc_build_virtual_users"
 puts "  WAREHOUSES: $warehouses"
+puts "  TPROCC_DRIVER: $tprocc_driver"
 puts "  TPROCC_DRIVER_TYPE: $tprocc_driver_type"
 puts "  TPROCC_ALLWAREHOUSE: $tprocc_allwarehouse"
 puts "  USE_BCP: [expr {[info exists ::env(USE_BCP)] ? $::env(USE_BCP) : "not set"}]"
 
-# Initialize HammerDB 
+# Initialize HammerDB
 puts "SETTING UP TPROC-C SCHEMA BUILD"
-dbset db mssqls
+dbset db $tprocc_driver
 
 # Set benchmark to TPC-C
 dbset bm TPC-C
