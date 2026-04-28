@@ -23,6 +23,11 @@ RUN wget https://github.com/TPC-Council/HammerDB/releases/download/v5.0/HammerDB
     rm HammerDB-5.0-Prod-Lin-UBU24.tar.gz && \
     echo 'export LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu/:$LD_LIBRARY_PATH'  >> ~/.bashrc
 
+# Extract xtprof.so from the full DEB package (not included in Prod tarball)
+RUN mkdir -p /opt/HammerDB-5.0/modules && \
+    wget -q https://raw.githubusercontent.com/TPC-Council/HammerDB/v5.0/modules/xtprof-1.0.tm \
+        -O /opt/HammerDB-5.0/modules/xtprof-1.0.tm
+
 
 # Set HammerDB as executable
 WORKDIR /opt/HammerDB-5.0
