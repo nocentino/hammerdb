@@ -63,12 +63,16 @@ if {$tprocc_allwarehouse eq "true"} {
 }
 diset tpcc mssqls_count_ware $warehouses
 
-# Set checkpoint and timeprofile if they are true
+# Set checkpoint and timeprofile
 if {$tprocc_checkpoint eq "true"} {
     diset tpcc mssqls_checkpoint true
+} else {
+    diset tpcc mssqls_checkpoint false
 }
 if {$tprocc_timeprofile eq "true"} {
     diset tpcc mssqls_timeprofile true
+} else {
+    diset tpcc mssqls_timeprofile false
 }
 
 # Configure test options and load scripts
