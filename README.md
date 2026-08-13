@@ -468,11 +468,12 @@ HAMMERDB RESULT
 
 ## Upgrading from HammerDB 5.0
 
-HammerDB 6.0 extended its job repository schema — `JOBTIMING` gained the extra
-percentile columns, `JOBSYSTEM` gained hardware and software detail fields, and a
-new `JOBCI` table was added. **HammerDB 6.0 does not migrate a 5.0 `hammer.DB` in
-place.** If you carry an old one over in `output/`, the benchmark itself still runs
-and reports its TPM/NOPM, but recording the timing data fails at the end of the run:
+HammerDB 6.0 extended its job repository schema. `JOBSYSTEM` gained hardware and
+software detail fields and *is* migrated automatically on open (`ALTER TABLE ADD
+COLUMN`), and a new `JOBCI` table is created. **`JOBTIMING` has no such migration
+path**, so a 5.0 `hammer.DB` is missing the new percentile columns. If you carry an
+old one over in `output/`, the benchmark itself still runs and reports its TPM/NOPM,
+but recording the timing data fails at the end of the run:
 
 ```
 Vuser 1:TEST RESULT : System achieved 23275 NOPM from 54230 SQL Server TPM
