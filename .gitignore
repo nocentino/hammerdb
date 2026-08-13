@@ -2,3 +2,4 @@ output/*
 hammerdb.code-workspace
 *.bak
 *.env
+.DS_Store

@@ -16,36 +16,36 @@ RUN apt-get update && \
     rm -rf /var/apt/cache/* /tmp/* /var/tmp/* /var/lib/apt/lists
 
     
-# Install configure HammerDB-v5.0...change this to get the latest
+# Install configure HammerDB-v6.0...change this to get the latest
 WORKDIR /opt
-RUN wget https://github.com/TPC-Council/HammerDB/releases/download/v5.0/HammerDB-5.0-Prod-Lin-UBU24.tar.gz && \
-    tar -xzf HammerDB-5.0-Prod-Lin-UBU24.tar.gz && \
-    rm HammerDB-5.0-Prod-Lin-UBU24.tar.gz && \
+RUN wget https://github.com/TPC-Council/HammerDB/releases/download/v6.0/HammerDB-6.0-Prod-Lin-UBU24.tar.gz && \
+    tar -xzf HammerDB-6.0-Prod-Lin-UBU24.tar.gz && \
+    rm HammerDB-6.0-Prod-Lin-UBU24.tar.gz && \
     echo 'export LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu/:$LD_LIBRARY_PATH'  >> ~/.bashrc
 
-# Extract xtprof.so from the full DEB package (not included in Prod tarball)
-RUN mkdir -p /opt/HammerDB-5.0/modules && \
-    wget -q https://raw.githubusercontent.com/TPC-Council/HammerDB/v5.0/modules/xtprof-1.0.tm \
-        -O /opt/HammerDB-5.0/modules/xtprof-1.0.tm
+# Provide xtprof on disk for the time profiler (TPROCC_TIMEPROFILE=true)
+RUN mkdir -p /opt/HammerDB-6.0/modules && \
+    wget -q https://raw.githubusercontent.com/TPC-Council/HammerDB/v6.0/modules/xtprof-1.0.tm \
+        -O /opt/HammerDB-6.0/modules/xtprof-1.0.tm
 
 
 # Set HammerDB as executable
-WORKDIR /opt/HammerDB-5.0
+WORKDIR /opt/HammerDB-6.0
 RUN chmod +x ./hammerdbcli && \
     # Create symbolic link to bcp in the current directory
-    ln -sf /opt/mssql-tools18/bin/bcp /opt/HammerDB-5.0/bcp && \
+    ln -sf /opt/mssql-tools18/bin/bcp /opt/HammerDB-6.0/bcp && \
     # Also add it to system path
     ln -sf /opt/mssql-tools18/bin/bcp /usr/local/bin/bcp
 
 
 # Add the entrypoint script
-COPY entrypoint.sh /opt/HammerDB-5.0/entrypoint.sh
-RUN chmod +x /opt/HammerDB-5.0/entrypoint.sh
+COPY entrypoint.sh /opt/HammerDB-6.0/entrypoint.sh
+RUN chmod +x /opt/HammerDB-6.0/entrypoint.sh
 
 
 # Set the working directory
-WORKDIR /opt/HammerDB-5.0
+WORKDIR /opt/HammerDB-6.0
 
 
 # Entry point
-ENTRYPOINT ["/opt/HammerDB-5.0/entrypoint.sh"]
+ENTRYPOINT ["/opt/HammerDB-6.0/entrypoint.sh"]

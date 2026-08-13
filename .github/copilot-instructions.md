@@ -6,7 +6,7 @@ This project automates HammerDB TPC-C and TPC-H benchmarks against SQL Server us
 
 **Components:**
 - `loadtest.sh` — Main orchestration script (demo/presentation style, run step-by-step)
-- `docker-compose.yaml` — Runs HammerDB 5.0 container (`linux/amd64`, `network_mode: host`)
+- `docker-compose.yaml` — Runs HammerDB 6.0 container (`linux/amd64`, `network_mode: host`)
 - `entrypoint.sh` — Container entrypoint; dispatches to the correct Tcl script based on `RUN_MODE` and `BENCHMARK`
 - `scripts/*.tcl` — HammerDB Tcl scripts for each phase and benchmark type
 - `hammerdb.env` — All runtime configuration (not committed; copy from `hammerdb.env.example`)
@@ -48,7 +48,7 @@ HAMMERDB_ENV_FILE=hammerdb.env docker compose run --rm --no-TTY -e RUN_MODE=pars
 - **`--no-TTY` is required** for the `parse` phase when running non-interactively to avoid truncated output.
 - **Platform**: Always use `--platform=linux/amd64` for SQL Server and HammerDB containers (Rosetta emulation on Apple Silicon).
 - **Output files**: CSVs land in `output/` with names like `CustomerTable1.csv`, `HistoryTable1.csv`; raw result files are `mssqls_tprocc` / `mssqls_tproch`.
-- **Tcl scripts** live in `scripts/` and are volume-mounted into the container at `/opt/HammerDB-5.0/scripts/` — edits take effect immediately without rebuilding the image.
+- **Tcl scripts** live in `scripts/` and are volume-mounted into the container at `/opt/HammerDB-6.0/scripts/` — edits take effect immediately without rebuilding the image.
 
 ## Key Files
 

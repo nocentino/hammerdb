@@ -8,10 +8,12 @@ services:
           platforms:
             - linux/amd64
         env_file:
-          - ${HAMMERDB_ENV_FILE}
+          # Defaults to hammerdb.env so a fresh clone works without a local .env file.
+          # Override to test several configurations, e.g. HAMMERDB_ENV_FILE=hammerdb-2022.env
+          - ${HAMMERDB_ENV_FILE:-hammerdb.env}
         environment:
           - RUN_MODE
           - BENCHMARK
         volumes:
-          - ./scripts:/opt/HammerDB-5.0/scripts
+          - ./scripts:/opt/HammerDB-6.0/scripts
           - ./output:/tmp

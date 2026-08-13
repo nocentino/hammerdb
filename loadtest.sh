@@ -6,7 +6,9 @@ set -euo pipefail
 #
 # This script automates the setup and execution of HammerDB load tests for:
 # - TPC-C (Transaction Processing Performance Council Benchmark C)
-# - TPC-H (Transaction Processing Performance Council Benchmark H)
+#
+# TPC-H is not run here. To run it, use the docker compose commands in the
+# README with BENCHMARK=tproch.
 #
 # Prerequisites:
 # - Docker and Docker Compose installed
@@ -17,7 +19,7 @@ set -euo pipefail
 # SQL SERVER CONTAINER SETUP
 # ============================
 
-echo "Starting SQL Server 2025 CU3 container on port 4001..."
+echo "Starting SQL Server 2025 CU8 container on port 4001..."
 docker run \
     --env 'ACCEPT_EULA=Y' \
     --env 'MSSQL_SA_PASSWORD=S0methingS@Str0ng!' \
@@ -27,7 +29,7 @@ docker run \
     --volume sqlbackups:/var/opt/mssql/backups \
     --publish 4001:1433 \
     --platform=linux/amd64 \
-    --detach mcr.microsoft.com/mssql/server:2025-CU3-ubuntu-22.04
+    --detach mcr.microsoft.com/mssql/server:2025-CU8-ubuntu-24.04
 
 echo "Waiting for SQL Server to be ready..."
 for i in $(seq 1 30); do

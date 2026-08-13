@@ -4,6 +4,8 @@ This repository contains automated HammerDB benchmark scripts for running TPC-C 
 
 Full blog post here: [https://www.nocentino.com/posts/2025-09-06-hammerdb-containers/](https://www.nocentino.com/posts/2025-09-06-hammerdb-containers/)
 
+Currently built and tested against **HammerDB 6.0** and **SQL Server 2025 CU8**.
+
 ## Overview
 
 The scripts provide a streamlined way to:
@@ -23,18 +25,29 @@ All configuration is managed through environment variables, making it easy to ad
 
 ```
 hammerdb/
-├── hammerdb.env                    # Environment configuration file
-├── docker-compose.yml              # Docker Compose configuration
-├── loadtest.sh                     # Main execution script
+├── hammerdb.env                    # Environment configuration file (not committed)
+├── hammerdb.env.example            # Template to copy to hammerdb.env
+├── docker-compose.yaml             # Docker Compose configuration
+├── dockerfile                      # HammerDB 6.0 + mssql-tools18 image
+├── entrypoint.sh                   # Dispatches to a Tcl script by RUN_MODE + BENCHMARK
+├── loadtest.sh                     # Main execution script (TPC-C end to end)
+├── cleanup.sql                     # Ad-hoc drop/backup/restore helpers
 ├── scripts/
 │   ├── build_schema_tprocc.tcl    # Build TPC-C schema
 │   ├── build_schema_tproch.tcl    # Build TPC-H schema
 │   ├── load_test_tprocc.tcl       # Run TPC-C benchmark
 │   ├── load_test_tproch.tcl       # Run TPC-H benchmark
-│   └── generic_tprocc_result.tcl  # Extract TPC-C results
-├── output/                         # Test results directory (created automatically)
+│   ├── parse_output_tprocc.tcl    # Extract TPC-C results
+│   └── parse_output_tproch.tcl    # Extract TPC-H results
+├── output/                         # Test results directory (mounted as /tmp in container)
 └── README.md                       # This file
 ```
+
+The `output/` directory is mounted into the container as `/tmp`. It holds HammerDB's
+job repository (`hammer.DB`), the time profiler log (`hdbxtprofile.log`), and BCP
+intermediate CSVs from schema builds. It is gitignored and safe to delete between
+runs — everything in it is regenerated, though deleting `hammer.DB` also discards
+the history of previous benchmark jobs.
 
 ## Getting Started: The 5-Minute Setup
 
@@ -50,6 +63,10 @@ cp hammerdb.env.example hammerdb.env
 ./loadtest.sh
 ```
 
+`loadtest.sh` starts a SQL Server 2025 container, runs the TPC-C build, load, and
+parse phases against it, then tears the container down. It does not run TPC-H — use
+the `BENCHMARK=tproch` commands below for that.
+
 ## Configure your test parameters
 
 Once you have the environment up and running, now its time to customize it for your environment.  Edit `hammerdb.env` to match your requirements. See [Configuration](#configuration) section for details.
@@ -61,7 +78,7 @@ This environment consists of two main components: a 2025 test container, and a c
 
 ### Start SQL Server Container
 
-**SQL Server 2025 RC0 on port 4001**
+**SQL Server 2025 CU8 on port 4001**
 
 ```
 docker run \
@@ -71,7 +88,7 @@ docker run \
     --volume sqldata_2025:/var/opt/mssql \
     --publish 4001:1433 \
     --platform=linux/amd64 \
-    --detach mcr.microsoft.com/mssql/server:2025-RC1-ubuntu-24.04
+    --detach mcr.microsoft.com/mssql/server:2025-CU8-ubuntu-24.04
 ```
 
 ### Run HammerDB Tests with Docker Compose
@@ -102,6 +119,57 @@ docker compose run --rm --no-TTY -e RUN_MODE=parse -e BENCHMARK=tproch hammerdb
 
 > **Tip**: If you're experiencing truncated output during the parse phase, use the `--no-TTY` flag to disable pseudo-TTY allocation, which provides raw unbuffered output.
 
+These commands read `hammerdb.env` by default. To keep several configurations side by
+side and switch between them, set `HAMMERDB_ENV_FILE`:
+
+```bash
+HAMMERDB_ENV_FILE=hammerdb-2022.env RUN_MODE=load BENCHMARK=tprocc docker compose up
+HAMMERDB_ENV_FILE=hammerdb-2025.env RUN_MODE=load BENCHMARK=tprocc docker compose up
+```
+
+## Validating Your Setup (Smoke Test)
+
+Before running a real benchmark, confirm the whole pipeline works end to end. Use the
+minimal configuration from [The smallest test you can run](#the-smallest-test-you-can-run),
+which builds a single warehouse and runs for one minute.
+
+```bash
+# 1. Start a local SQL Server to test against
+docker run \
+    --env 'ACCEPT_EULA=Y' \
+    --env 'MSSQL_SA_PASSWORD=S0methingS@Str0ng!' \
+    --name 'sql2025' \
+    --publish 4001:1433 \
+    --platform=linux/amd64 \
+    --detach mcr.microsoft.com/mssql/server:2025-CU8-ubuntu-24.04
+
+# 2. Build the HammerDB image
+docker compose build
+
+# 3. Run all three phases
+RUN_MODE=build BENCHMARK=tprocc docker compose up --abort-on-container-exit
+RUN_MODE=load  BENCHMARK=tprocc docker compose up --abort-on-container-exit
+docker compose run --rm --no-TTY -e RUN_MODE=parse -e BENCHMARK=tprocc hammerdb
+
+# 4. Clean up
+docker compose down && docker rm -f sql2025
+```
+
+What a healthy run looks like:
+
+- **build** ends with `TPCC SCHEMA COMPLETE`, `FINISHED SUCCESS`, and `TPROC-C SCHEMA BUILD COMPLETE`
+- **load** ends with a `TEST RESULT : System achieved <N> NOPM from <N> SQL Server TPM` line,
+  every virtual user reporting `FINISHED SUCCESS`, and a job ID written to `output/mssqls_tprocc`
+- **parse** prints `TRANSACTION RESPONSE TIMES`, `TRANSACTION COUNT`, and `HAMMERDB RESULT` as JSON
+
+Watch for a virtual user reporting `FINISHED FAILED` *after* a plausible `TEST RESULT`
+line — the benchmark numbers can look fine while result recording failed. See
+[Upgrading from HammerDB 5.0](#upgrading-from-hammerdb-50) for the most common cause.
+
+> **Note**: On Apple Silicon both images run under emulation (`linux/amd64`), so throughput
+> numbers from a smoke test on a Mac are not meaningful for comparison — you are only
+> checking that the plumbing works.
+
 ## Configuration
 
 All configuration is managed through the `hammerdb.env` file. Below are the expose configration environment variables.
@@ -115,7 +183,7 @@ All configuration is managed through the `hammerdb.env` file. Below are the expo
 
 #### Common Settings
 - `USE_BCP`: Enable BCP for faster data loading (true/false)
-- `TMPDIR`: Directory for temporary files and output (default: /tmp)
+- `TMP`: Directory for temporary files and output (default: /tmp)
 - `MSSQLS_TCP`: Use TCP connection (default: true)
 - `MSSQLS_AUTHENTICATION`: Authentication type (default: sql)
 
@@ -170,7 +238,7 @@ SQL_SERVER_HOST=localhost,4001
 
 # Common settings for all benchmarks
 USE_BCP=true
-TMPDIR=/tmp
+TMP=/tmp
 
 # Connection settings
 MSSQLS_TCP=true
@@ -222,7 +290,7 @@ SQL_SERVER_HOST=localhost,4001
 
 # Common settings for all benchmarks
 USE_BCP=true
-TMPDIR=/tmp
+TMP=/tmp
 
 # Connection settings
 MSSQLS_TCP=true
@@ -274,7 +342,7 @@ SQL_SERVER_HOST=localhost,4001
 
 # Common settings for all benchmarks
 USE_BCP=true
-TMPDIR=/tmp
+TMP=/tmp
 
 # Connection settings
 MSSQLS_TCP=true
@@ -326,7 +394,7 @@ SQL_SERVER_HOST=localhost,4001
 
 # Common settings for all benchmarks
 USE_BCP=true
-TMPDIR=/tmp
+TMP=/tmp
 
 # Connection settings
 MSSQLS_TCP=true
@@ -373,7 +441,10 @@ The framework automatically extracts key metrics, including:
 **TPC-C Output:**
 - Transactions Per Minute (TPM)
 - New Orders Per Minute (NOPM)
-- Response time percentiles
+- Per-transaction response times, reported by the xtprof time profiler as
+  `p99_ms` / `p95_ms` / `p75_ms` / `p50_ms` / `p25_ms`, plus min/avg/max, standard
+  deviation, and call counts for each stored procedure (NEWORD, PAYMENT, DELIVERY,
+  SLEV, OSTAT)
 
 **TPC-H Output:**
 - Individual query execution times
@@ -381,6 +452,47 @@ The framework automatically extracts key metrics, including:
 - Query-specific metrics
 
 Results are saved in both raw format (logs) and parsed format in the `output/` directory.
+
+A parsed TPC-C run looks like this:
+
+```
+HAMMERDB RESULT
+[
+  "6A7E2CDBC7F603E293439383",
+  "2026-08-13 20:45:15",
+  "1 Active Virtual Users configured",
+  "TEST RESULT : System achieved 26018 NOPM from 60408 SQL Server TPM"
+]
+```
+
+
+## Upgrading from HammerDB 5.0
+
+HammerDB 6.0 extended its job repository schema — `JOBTIMING` gained the extra
+percentile columns, `JOBSYSTEM` gained hardware and software detail fields, and a
+new `JOBCI` table was added. **HammerDB 6.0 does not migrate a 5.0 `hammer.DB` in
+place.** If you carry an old one over in `output/`, the benchmark itself still runs
+and reports its TPM/NOPM, but recording the timing data fails at the end of the run:
+
+```
+Vuser 1:TEST RESULT : System achieved 23275 NOPM from 54230 SQL Server TPM
+Error in Virtual User 1: table JOBTIMING has no column named p75_ms
+Vuser 1:FINISHED FAILED
+```
+
+Note that the run reports `FINISHED FAILED` only *after* printing a plausible
+result, so this is easy to miss. Delete or archive `output/hammer.DB` before your
+first 6.0 run and HammerDB will create a fresh repository with the new schema:
+
+```bash
+mv output/hammer.DB output/hammer.DB.hammerdb5.bak   # or just delete it
+```
+
+Old jobs in an archived 5.0 repository are still readable by HammerDB 5.0; there is
+no in-place upgrade path, so keep the file if you need that history.
+
+The Tcl scripts in `scripts/` needed no changes for 6.0 — every `mssqls_*` parameter
+they set still exists in 6.0's `config/mssqlserver.xml`.
 
 
 ### Troubleshooting
@@ -397,7 +509,7 @@ docker run -it --network host \
   --env RUN_MODE=parse \
   --env BENCHMARK=tprocc \
   --env TMP=/tmp \
-  -v $(pwd)/scripts:/opt/HammerDB-5.0/scripts \
+  -v $(pwd)/scripts:/opt/HammerDB-6.0/scripts \
   -v $(pwd)/output:/tmp \
   --entrypoint /bin/bash \
   hammerdb-hammerdb:latest
