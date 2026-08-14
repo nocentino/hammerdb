@@ -183,6 +183,11 @@ line — the benchmark numbers can look fine while result recording failed. See
 
 All configuration is managed through the `hammerdb.env` file. Below are the expose configration environment variables.
 
+> **Note**: Set these in the env file rather than in the Docker Compose
+> `environment:` list. Compose passes a variable listed there as an *empty* value
+> when it is unset in your shell, which silently overrides the env file. To change
+> one for a single run, use `docker compose run -e VAR=value ...` instead.
+
 ### Environment Variables
 
 #### Database Connection
@@ -249,7 +254,15 @@ All configuration is managed through the `hammerdb.env` file. Below are the expo
 
 ## Recommended Configuration for Different System Sizes
 
-Each configuration below provides a complete `hammerdb.env` file tailored for different hardware specifications. 
+Each configuration below sizes the workload for different hardware specifications.
+
+These blocks cover connection and workload settings only. The HammerDB 6.0
+reporting, metrics, and profile comparison settings are omitted for brevity and
+fall back to their defaults — JSON reports and charts on, metrics off, runs
+untagged. Add them from [hammerdb.env.example](hammerdb.env.example) if you want
+to tag runs with `PROFILE_ID` for [Comparing Runs](#comparing-runs) or enable
+[CPU and I/O Metrics](#cpu-and-io-metrics).
+
 
 ### The smallest test you can run.
 
