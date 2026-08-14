@@ -163,7 +163,15 @@ puts "TPROC-C LOAD TEST COMPLETE"
 
 # Write job ID to output file for parsing
 puts "Creating output file at: $tmpdir/mssqls_tprocc"
+# HammerDB's metrics collector declares "global jobid" and rewrites it in place,
+# stripping the "Benchmark Run jobid=" prefix. That means the value here differs
+# depending on whether METRICS_ENABLED was set, so normalise to a bare id and
+# write it in a fixed "jobid=<id>" form the parse phase can always read.
+set jobid_value [string trim $jobid]
+if {[regexp {=(.*)$} $jobid_value -> jobid_stripped]} {
+    set jobid_value [string trim $jobid_stripped]
+}
 set of [ open $tmpdir/mssqls_tprocc w ]
-puts $of $jobid
+puts $of "jobid=$jobid_value"
 close $of
 puts "Job ID $jobid written to $tmpdir/mssqls_tprocc"

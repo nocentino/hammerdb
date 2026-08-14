@@ -17,7 +17,7 @@ RUN apt-get update && \
     echo 'export PATH="$PATH:/opt/mssql-tools18/bin"' >> ~/.bashrc && \
     /bin/bash -c "source ~/.bashrc" && \
     apt-get clean && \
-    rm -rf /var/apt/cache/* /tmp/* /var/tmp/* /var/lib/apt/lists
+    rm -rf /var/cache/apt/* /tmp/* /var/tmp/* /var/lib/apt/lists
 
     
 # Install configure HammerDB-v6.0...change this to get the latest

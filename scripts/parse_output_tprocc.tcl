@@ -63,15 +63,39 @@ proc jobsection {jobid subcommand} {
     if {[string trim $value] eq ""} {
         return "null"
     }
+    # When a section has no data HammerDB emits "Jobid has no <x> data", which
+    # its JSON formatter mangles into {"Jobid": "has", "no": "...", ...}.
+    # Report that as null rather than passing fabricated fields through.
+    if {[regexp {"Jobid"\s*:\s*"has"} $value]} {
+        return "null"
+    }
+    return $value
+}
+
+# The profile id actually recorded against the job. Reading it from the job
+# repository rather than the environment means the report describes the run,
+# not whatever the environment happens to be set to at parse time.
+proc jobprofileid {jobid fallback} {
+    if {[catch {set value [hdbjobs eval {select profile_id from JOBMAIN where jobid=$jobid}]} msg]} {
+        return $fallback
+    }
+    if {[string trim $value] eq ""} {
+        return $fallback
+    }
     return $value
 }
 
 # Procedure to get the job ID from the output file
 proc getjobid {filename} {
     set fd [open $filename r]
-    set jobid [lindex [split [gets $fd] =] 1]
+    set line [string trim [gets $fd]]
     close $fd
-    return $jobid
+    # Accepts "jobid=<id>", "Benchmark Run jobid=<id>", or a bare id, since the
+    # metrics collector rewrites the job id HammerDB hands back.
+    if {[regexp {=(.*)$} $line -> id]} {
+        return [string trim $id]
+    }
+    return $line
 }
 
 # Procedure to get the output from the output file
@@ -86,7 +110,6 @@ proc getoutput {filename} {
 set tmpdir $::env(TMP)
 set report_json [envdef REPORT_JSON true]
 set save_charts [envdef SAVE_CHARTS true]
-set profile_id [envdef PROFILE_ID 0]
 
 set ::outputfile  $tmpdir/mssqls_tprocc
 set filename $::outputfile
@@ -96,6 +119,8 @@ if {$jobid eq ""} {
     puts "Job ID not found in the output file."
     exit 1
 }
+
+set profile_id [jobprofileid $jobid [envdef PROFILE_ID 0]]
 
 # Set output as JSON
 jobs format JSON

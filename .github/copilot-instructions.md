@@ -84,3 +84,7 @@ docker compose --profile metrics up -d agent
 - **Don't add vars to the compose `environment:` passthrough list.** When unset in the shell, Compose passes them as empty and they clobber the `env_file` value. Set them in the env file, or override per run with `docker compose run -e VAR=value`.
 - **`jobs <jobid> save` is broken in HammerDB 6.0** — the shipped binary is missing procs it calls and it writes a zero-byte file. `parse_output_tprocc.tcl` builds the JSON report itself.
 - **Metrics need the agent on the database host** plus `sysstat`. A missing agent warns and continues rather than failing the run.
+- **The metrics collector rewrites the global `jobid`.** `genmetricscli.tcl` declares `global jobid` and strips the `Benchmark Run jobid=` prefix in place, so the value differs depending on whether `METRICS_ENABLED` was set. The load scripts normalise it and write `jobid=<id>`; the parse scripts accept bare, `jobid=`, or `Benchmark Run jobid=` forms. Don't reintroduce a dependency on the raw format.
+- **Performance profiles are TPROC-C only.** `PROFILE_ID` is ignored for TPROC-H, and HammerDB does not record a profile id against a TPROC-H job.
+- **HammerDB mangles "no data" messages in JSON mode** into `{"Jobid": "has", ...}`. `jobsection` maps that to `null`; don't pass it through as data.
+- **CI**: `.github/workflows/smoke-test.yml` builds the image and runs build/load/parse plus a profile comparison on every push and PR.

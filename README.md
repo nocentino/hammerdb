@@ -31,6 +31,7 @@ hammerdb/
 ├── dockerfile                      # HammerDB 6.0 + mssql-tools18 image
 ├── entrypoint.sh                   # Dispatches to a Tcl script by RUN_MODE + BENCHMARK
 ├── loadtest.sh                     # Main execution script (TPC-C end to end)
+├── test.sh                         # Compare two configurations with jobs diff
 ├── cleanup.sql                     # Ad-hoc drop/backup/restore helpers
 ├── scripts/
 │   ├── build_schema_tprocc.tcl    # Build TPC-C schema
@@ -98,7 +99,11 @@ and leaves these in `output/`:
 Edit `hammerdb.env` and change `SQL_SERVER_HOST` to any SQL Server on your network,
 then size the workload to the hardware using one of the
 [recommended configurations](#recommended-configuration-for-different-system-sizes).
-Skip the container step in `loadtest.sh` and drive the phases directly:
+
+`loadtest.sh` reads its connection settings from that file, so it only starts and
+removes a local SQL Server container when `SQL_SERVER_HOST` points at localhost.
+Against any other host it runs the benchmark directly and leaves the server alone.
+You can also drive the phases yourself:
 
 ```bash
 RUN_MODE=build BENCHMARK=tprocc docker compose up   # once per schema size
@@ -289,12 +294,20 @@ All configuration is managed through the `hammerdb.env` file. Below are the expo
 - `TPROCH_SCALE_FACTOR`: Scale factor for data generation
 - `TPROCH_BUILD_THREADS`: Number of threads for schema build
 - `TPROCH_USE_CLUSTERED_COLUMNSTORE`: Use clustered columnstore indexes (true/false)
+- `TPROCH_MAXDOP`: Maximum degree of parallelism (default: 2). Applied at schema build time, so changing it requires a rebuild to take effect
 
 **Test Settings:**
 - `TPROCH_VIRTUAL_USERS`: Virtual users for test execution
 - `TPROCH_TOTAL_QUERYSETS`: Number of query sets to run
-- `TPROCH_MAXDOP`: Maximum degree of parallelism for queries
 - `TPROCH_LOG_TO_TEMP`: Log output to temp directory (0/1)
+
+TPC-H honours `REPORT_JSON`, `SAVE_CHARTS`, and the `METRICS_*` variables, writing
+`tproch_<jobid>.json` and charts alongside the original `.out` text report.
+
+`PROFILE_ID` does **not** apply to TPC-H. HammerDB performance profiles are a
+TPROC-C only feature — a profile id set during a TPC-H run is not recorded against
+the job — so [Comparing Runs](#comparing-runs) is TPC-C only. TPC-H also produces no
+xtprof timing data, so the `timing` section of its JSON report is `null`.
 
 ## Recommended Configuration for Different System Sizes
 

@@ -1,4 +1,12 @@
 #!/bin/tclsh
+# Validate required environment variables before use
+foreach var {USERNAME PASSWORD SQL_SERVER_HOST TPROCH_DATABASE_NAME TPROCH_SCALE_FACTOR TPROCH_DRIVER TPROCH_BUILD_THREADS} {
+    if {![info exists ::env($var)] || $::env($var) eq ""} {
+        puts "Error: Environment variable $var is not set or empty"
+        exit 1
+    }
+}
+
 set username $::env(USERNAME)
 set password $::env(PASSWORD)
 set sql_server_host $::env(SQL_SERVER_HOST)
@@ -9,14 +17,6 @@ set tproch_scale_factor $::env(TPROCH_SCALE_FACTOR)
 set tproch_driver $::env(TPROCH_DRIVER)
 set tproch_build_threads $::env(TPROCH_BUILD_THREADS)
 set tproch_clustered_columnstore $::env(TPROCH_USE_CLUSTERED_COLUMNSTORE)
-
-# Validate required environment variables
-foreach var {USERNAME PASSWORD SQL_SERVER_HOST TPROCH_DATABASE_NAME TPROCH_SCALE_FACTOR TPROCH_DRIVER TPROCH_BUILD_THREADS} {
-    if {![info exists ::env($var)] || $::env($var) eq ""} {
-        puts "Error: Environment variable $var is not set or empty"
-        exit 1
-    }
-}
 
 # Initialize HammerDB
 puts "SETTING UP TPROC-H SCHEMA BUILD"
