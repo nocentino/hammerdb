@@ -1,8 +1,9 @@
 services:
     hammerdb:
+        image: hammerdb-hammerdb:latest
         network_mode: host
         platform: linux/amd64
-        build: 
+        build:
           context: .
           dockerfile: dockerfile
           platforms:
@@ -17,3 +18,26 @@ services:
         volumes:
           - ./scripts:/opt/HammerDB-6.0/scripts
           - ./output:/tmp
+
+    # Optional CPU/IO metrics agent. This is what populates JOBMETRIC and the
+    # JOBSYSTEM hardware/software fields when METRICS_ENABLED=true.
+    #
+    # The agent must run on the DATABASE host. This service covers the local
+    # SQL Server container started by loadtest.sh, where the database and the
+    # Docker host are the same machine. For a remote SQL Server, run the agent
+    # on that server instead and point METRICS_AGENT_HOSTNAME at it.
+    #
+    #   docker compose --profile metrics up -d agent
+    agent:
+        profiles: ["metrics"]
+        image: hammerdb-hammerdb:latest
+        build:
+          context: .
+          dockerfile: dockerfile
+          platforms:
+            - linux/amd64
+        network_mode: host
+        pid: host
+        platform: linux/amd64
+        entrypoint: ["/opt/HammerDB-6.0/agent/agent"]
+        command: ["${METRICS_AGENT_ID:-10000}"]

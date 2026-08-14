@@ -27,6 +27,24 @@ set tprocc_use_transaction_counter $::env(TPROCC_USE_TRANSACTION_COUNTER)
 set tprocc_checkpoint $::env(TPROCC_CHECKPOINT)
 set tprocc_timeprofile $::env(TPROCC_TIMEPROFILE)
 
+# Optional settings, defaulted so existing env files keep working
+proc envdef {name default} {
+    if {[info exists ::env($name)] && $::env($name) ne ""} {
+        return $::env($name)
+    }
+    return $default
+}
+
+# Tags this run so it can be compared against other runs with "jobs diff".
+# 0 means untagged, which is HammerDB's default.
+set profile_id [envdef PROFILE_ID 0]
+# Reservoir size for the xtprof time profiler percentiles
+set xt_reservoir [envdef TPROCC_XT_RESERVOIR 10000]
+# CPU/IO metrics collected by the HammerDB agent running on the database host
+set metrics_enabled [envdef METRICS_ENABLED false]
+set metrics_agent_hostname [envdef METRICS_AGENT_HOSTNAME localhost]
+set metrics_agent_id [envdef METRICS_AGENT_ID 10000]
+
 # Initialize HammerDB
 puts "SETTING UP TPROC-C LOAD TEST"
 puts "Environment variables loaded:"
@@ -35,6 +53,8 @@ puts "  Virtual Users: $virtual_users"
 puts "  Duration: $duration minutes"
 puts "  Rampup: $rampup minutes"
 puts "  Total Iterations: $total_iterations"
+puts "  Profile ID: $profile_id"
+puts "  Metrics enabled: $metrics_enabled"
 
 # Set up the database connection details for MSSQL
 dbset db $tprocc_driver
@@ -75,6 +95,16 @@ if {$tprocc_timeprofile eq "true"} {
     diset tpcc mssqls_timeprofile false
 }
 
+# Tag this run with a performance profile id so it can be compared later with
+# "jobs diff". HammerDB treats 0 as untagged, so only set it when asked.
+if {$profile_id ne "0"} {
+    puts "Tagging run with performance profile id $profile_id"
+    jobs profileid $profile_id
+}
+
+# Reservoir sampling size backing the xtprof percentiles (p99/p95/p75/p50/p25)
+giset timeprofile xt_reservoir $xt_reservoir
+
 # Configure test options and load scripts
 vuset logtotemp $tprocc_log_to_temp
 loadscript
@@ -95,10 +125,33 @@ if {$tprocc_use_transaction_counter eq "true"} {
     tcstatus
 }
 
+# Start CPU/IO metrics collection. This is what populates JOBMETRIC and the
+# JOBSYSTEM hardware/software fields, and it requires the HammerDB agent to be
+# running on the database host. A missing agent must not fail the benchmark.
+set metrics_started false
+if {$metrics_enabled eq "true"} {
+    puts "Connecting to metrics agent at $metrics_agent_hostname:$metrics_agent_id"
+    metset agent_hostname $metrics_agent_hostname
+    metset agent_id $metrics_agent_id
+    if {[catch {metstart} metmsg]} {
+        puts "WARNING: could not start metrics ($metmsg). Continuing without metrics."
+    } else {
+        set metrics_started true
+        puts "Metrics collection started"
+    }
+}
+
 puts "About to run vurun command..."
 set jobid [ vurun ]
 puts "vurun completed with job ID: $jobid"
 vudestroy
+
+if {$metrics_started} {
+    puts "Stopping metrics collection..."
+    if {[catch {metstop} metmsg]} {
+        puts "WARNING: metstop failed ($metmsg)"
+    }
+}
 
 if {$tprocc_use_transaction_counter eq "true"} {
     puts "Stopping transaction counter..."

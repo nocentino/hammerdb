@@ -28,6 +28,9 @@ if [[ "$BENCHMARK" == "tprocc" ]]; then
         parse)
             SCRIPT_NAME="parse_output_tprocc.tcl"
             ;;
+        compare)
+            SCRIPT_NAME="compare_profiles.tcl"
+            ;;
         *)
             echo "Unknown RUN_MODE: '$RUN_MODE' for benchmark '$BENCHMARK'. Exiting."
             exit 1

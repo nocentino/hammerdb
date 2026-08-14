@@ -3,10 +3,14 @@ FROM ubuntu:24.04
 
 # Set environment variables
 ENV DEBIAN_FRONTEND=noninteractive
+# HammerDB output and the generated HTML charts contain non-ASCII characters,
+# which are mangled or rejected under the default POSIX locale
+ENV LANG=C.UTF-8
+ENV LC_ALL=C.UTF-8
 
 # Install packages, configure shell and clean up cache
 RUN apt-get update && \
-    apt-get install -y apt-transport-https curl gnupg2 wget python3 && \
+    apt-get install -y apt-transport-https curl gnupg2 wget python3 sysstat && \
     curl -sSL -O https://packages.microsoft.com/config/ubuntu/24.04/packages-microsoft-prod.deb && \
     dpkg -i packages-microsoft-prod.deb && rm packages-microsoft-prod.deb && \
     apt-get update && ACCEPT_EULA=Y apt-get install -y mssql-tools18 msodbcsql18 unixodbc unixodbc-dev && \

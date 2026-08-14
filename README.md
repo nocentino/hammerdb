@@ -37,8 +37,9 @@ hammerdb/
 │   ├── build_schema_tproch.tcl    # Build TPC-H schema
 │   ├── load_test_tprocc.tcl       # Run TPC-C benchmark
 │   ├── load_test_tproch.tcl       # Run TPC-H benchmark
-│   ├── parse_output_tprocc.tcl    # Extract TPC-C results
-│   └── parse_output_tproch.tcl    # Extract TPC-H results
+│   ├── parse_output_tprocc.tcl    # Extract TPC-C results, JSON report, charts
+│   ├── parse_output_tproch.tcl    # Extract TPC-H results
+│   └── compare_profiles.tcl       # Compare two TPC-C performance profiles
 ├── output/                         # Test results directory (mounted as /tmp in container)
 └── README.md                       # This file
 ```
@@ -115,7 +116,15 @@ RUN_MODE=load BENCHMARK=tproch docker compose up
 
 # TPC-H Results Parsing (use -T flag if output is getting truncated)
 docker compose run --rm --no-TTY -e RUN_MODE=parse -e BENCHMARK=tproch hammerdb
+
+# Compare two tagged TPC-C profiles, see "Comparing Runs" below
+docker compose run --rm --no-TTY -e RUN_MODE=compare -e BENCHMARK=tprocc \
+  -e BASE_PROFILE_ID=1 -e COMP_PROFILE_ID=2 hammerdb
 ```
+
+> **Note**: The Tcl scripts in `scripts/` are volume-mounted, so edits take effect
+> immediately. `entrypoint.sh` is copied into the image, so changing it (for example
+> to add a `RUN_MODE`) requires `docker compose build`.
 
 > **Tip**: If you're experiencing truncated output during the parse phase, use the `--no-TTY` flag to disable pseudo-TTY allocation, which provides raw unbuffered output.
 
@@ -206,6 +215,22 @@ All configuration is managed through the `hammerdb.env` file. Below are the expo
 - `TPROCC_USE_TRANSACTION_COUNTER`: Enable transaction counter (true/false)
 - `TPROCC_CHECKPOINT`: Enable checkpoint during test (true/false)
 - `TPROCC_TIMEPROFILE`: Enable time profiling (true/false)
+
+**Reporting Settings (HammerDB 6.0):**
+- `PROFILE_ID`: Tags the run so it can be compared later with `RUN_MODE=compare`. `0` means untagged (default: 0)
+- `TPROCC_XT_RESERVOIR`: Reservoir size backing the xtprof percentiles (default: 10000)
+- `REPORT_JSON`: Write a combined JSON report per job to the output directory (default: true)
+- `SAVE_CHARTS`: Write HTML charts per job to the output directory (default: true)
+
+**Metrics Settings (HammerDB 6.0):**
+- `METRICS_ENABLED`: Collect CPU/IO metrics and system data (default: false). Requires the agent, see [CPU and I/O Metrics](#cpu-and-io-metrics)
+- `METRICS_AGENT_HOSTNAME`: Host running the HammerDB agent (default: localhost)
+- `METRICS_AGENT_ID`: Agent port (default: 10000)
+
+**Profile Comparison Settings (used by `RUN_MODE=compare`):**
+- `BASE_PROFILE_ID`: Baseline profile id
+- `COMP_PROFILE_ID`: Profile compared against the baseline
+- `WEIGHTED_COMPARE`: Use weighted compare mode (true/false, default: false)
 
 #### TPROC-H (TPC-H) Configuration
 
@@ -465,6 +490,114 @@ HAMMERDB RESULT
 ]
 ```
 
+### JSON Reports and Charts
+
+Alongside the console output, the parse phase writes the following to `output/`:
+
+| File | Contents |
+|---|---|
+| `tprocc_<jobid>.json` | One document with the result, transaction count, xtprof timings, and system data |
+| `tprocc_<jobid>_result.html` | NOPM/TPM bar chart |
+| `tprocc_<jobid>_timing.html` | Response time distribution |
+| `tprocc_<jobid>_tcount.html` | Transaction count over the run |
+
+Charts are self-contained HTML and open directly in a browser. Turn either off with
+`REPORT_JSON=false` or `SAVE_CHARTS=false`.
+
+> **Note**: HammerDB 6.0 advertises a `jobs <jobid> save` command that writes an
+> AI-friendly JSON report, but the procs it depends on are missing from the shipped
+> 6.0 Linux binary and it fails leaving a zero-byte file. `parse_output_tprocc.tcl`
+> therefore assembles the report itself from the individual job subcommands. If a
+> later HammerDB release fixes `jobs save`, this can be replaced by it.
+
+## Comparing Runs
+
+Tag each run with a `PROFILE_ID` during the load phase, then compare two profiles.
+This is the intended way to test configurations against each other — SQL Server
+versions, storage, instance sizes — instead of eyeballing two result blobs.
+
+A profile is a *set* of runs, normally the same workload at increasing virtual user
+counts. Give every run in one configuration the same `PROFILE_ID`.
+
+```bash
+# Baseline configuration, tagged as profile 1
+HAMMERDB_ENV_FILE=hammerdb-2022.env RUN_MODE=load BENCHMARK=tprocc docker compose up
+
+# Configuration under test, tagged as profile 2
+HAMMERDB_ENV_FILE=hammerdb-2025.env RUN_MODE=load BENCHMARK=tprocc docker compose up
+
+# Compare them
+docker compose run --rm --no-TTY \
+  -e RUN_MODE=compare -e BENCHMARK=tprocc \
+  -e BASE_PROFILE_ID=1 -e COMP_PROFILE_ID=2 hammerdb
+```
+
+Set `PROFILE_ID` in each env file, or override per run with
+`docker compose run -e PROFILE_ID=2 ...`.
+
+The comparison prints each profile's runs and a summary, and writes
+`output/tprocc_profile_<base>_vs_<comp>.json` plus an HTML comparison chart:
+
+```
+PROFILE DIFF 1 VS 2
+Profiles compared (unweighted): matched=2, avg_base=32759, avg_comp=31370
+```
+
+`WEIGHTED_COMPARE=true` additionally reports a core-count weighted comparison.
+
+> **Note**: `matched` counts runs paired by virtual user count across the two
+> profiles. Profile charts need at least two runs per profile at different virtual
+> user counts — with a single run each, the comparison summary still works but the
+> chart is empty and is skipped with a warning.
+
+## CPU and I/O Metrics
+
+Setting `METRICS_ENABLED=true` collects CPU and I/O metrics during the run and
+populates the `JOBSYSTEM` hardware and software fields, which then appear in the
+`system` block of the JSON report:
+
+```json
+"system": {
+  "cpumodel": "VirtualApple @ 2.50GHz",
+  "cpucount": "12",
+  "os_name": "Ubuntu 24.04.4 LTS",
+  "memory": "19.5 GB",
+  "storage": "vda (256 GB); vdb (1 GB)",
+  "nic": "eth0 (10 Gbps)"
+}
+```
+
+This requires the HammerDB metric agent to be running **on the database host**, and
+the agent requires the `sysstat` package. Without a reachable agent the load phase
+prints a warning and continues, so the benchmark itself never fails because metrics
+are unavailable.
+
+**Local SQL Server** (the container started by `loadtest.sh`, where the database and
+Docker host are the same machine):
+
+```bash
+docker compose --profile metrics up -d agent
+```
+
+**Remote SQL Server** — run the agent on the database server itself:
+
+```bash
+# On the SQL Server host
+sudo apt-get install -y sysstat          # or: dnf install sysstat
+/opt/HammerDB-6.0/agent/agent 10000
+```
+
+Then point the load phase at it:
+
+```bash
+METRICS_ENABLED=true
+METRICS_AGENT_HOSTNAME=sqlserver.example.com
+METRICS_AGENT_ID=10000
+```
+
+> **Note**: On a Mac the agent reports the Docker VM, not macOS, and the figures are
+> distorted by emulation. Metrics are only meaningful when the agent runs on a real
+> Linux database host.
 
 ## Upgrading from HammerDB 5.0
 
