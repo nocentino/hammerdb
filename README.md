@@ -45,7 +45,8 @@ hammerdb/
 │   ├── load_test_tproch.tcl       # Run TPC-H benchmark
 │   ├── parse_output_tprocc.tcl    # Extract TPC-C results, JSON report, charts
 │   ├── parse_output_tproch.tcl    # Extract TPC-H results
-│   └── compare_profiles.tcl       # Compare two TPC-C performance profiles
+│   ├── compare_profiles.tcl       # Compare two TPC-C performance profiles
+│   └── hammerdb6_compat.tcl       # Restores the broken 6.0 "jobs save" command
 ├── output/                         # Test results directory (mounted as /tmp in container)
 └── README.md                       # This file
 ```
@@ -94,7 +95,8 @@ and leaves these in `output/`:
 
 | File | What it is |
 |---|---|
-| `tprocc_<jobid>.json` | Result, transaction counts, response time percentiles, system data |
+| `hdb_<jobid>.json` | HammerDB's own report: config, result, response times, metrics |
+| `tprocc_<jobid>.json` | Compact report: result, transaction counts, percentiles, system data |
 | `tprocc_<jobid>_result.html` | NOPM/TPM chart — open it in a browser |
 | `tprocc_<jobid>_timing.html` | Response time distribution |
 | `tprocc_<jobid>_tcount.html` | Transactions over the run |
@@ -646,7 +648,8 @@ Alongside the console output, the parse phase writes the following to `output/`:
 
 | File | Contents |
 |---|---|
-| `tprocc_<jobid>.json` | One document with the result, transaction count, xtprof timings, and system data |
+| `hdb_<jobid>.json` | HammerDB's own report: benchmark config, result, response times, metrics, system data |
+| `tprocc_<jobid>.json` | Compact report: result, transaction count, xtprof timings, system data, profile id |
 | `tprocc_<jobid>_result.html` | NOPM/TPM bar chart |
 | `tprocc_<jobid>_timing.html` | Response time distribution |
 | `tprocc_<jobid>_tcount.html` | Transaction count over the run |
@@ -655,7 +658,8 @@ TPC-H writes the same shape, alongside the original text report:
 
 | File | Contents |
 |---|---|
-| `tproch_<jobid>.json` | Result, query timings, and system data |
+| `hdb_<jobid>.json` | HammerDB's own report |
+| `tproch_<jobid>.json` | Compact report: result, query timings, and system data |
 | `tproch_<jobid>_result.html` | Query result chart |
 | `tproch_<jobid>_timing.html` | Query timing chart |
 | `mssqls_tproch_<jobid>.out` | Original plain text report, kept for compatibility |
@@ -667,11 +671,24 @@ A section with no data is reported as `null` rather than as empty fields. TPC-H
 produces no xtprof timing data, so `timing` is normally `null` there, and `system`
 is `null` unless metrics were enabled.
 
-> **Note**: HammerDB 6.0 advertises a `jobs <jobid> save` command that writes an
-> AI-friendly JSON report, but the procs it depends on are missing from the shipped
-> 6.0 Linux binary and it fails leaving a zero-byte file. `parse_output_tprocc.tcl`
-> therefore assembles the report itself from the individual job subcommands. If a
-> later HammerDB release fixes `jobs save`, this can be replaced by it.
+Two JSON reports are written because they come from different places.
+`hdb_<jobid>.json` is HammerDB's own richer format, produced by its
+`jobs <jobid> save` command. `tprocc_<jobid>.json` is assembled by the parse
+script from the individual job subcommands, is guaranteed to be produced even if
+the native path breaks again, and is the only one carrying the profile id. Drop
+either by editing the parse script if you only want one.
+
+> **Note**: `jobs <jobid> save` is broken in the shipped HammerDB 6.0 Linux binary.
+> Its `jobs_save_json` calls two helpers that exist in the v6.0 source but not in
+> the released starpack, so it fails with `invalid command name
+> "jobs_summary_public_config"` and leaves a zero-byte file.
+> [scripts/hammerdb6_compat.tcl](scripts/hammerdb6_compat.tcl) defines those two
+> helpers at runtime, taken verbatim from the v6.0 source, which makes the command
+> work. Each definition is guarded, so the shim becomes a no-op once a HammerDB
+> release ships them. The released binary keeps its modules in a password
+> protected VFS that takes precedence over `/opt/HammerDB-6.0/modules`, so dropping
+> the newer module on disk does not override it — the helpers have to be defined
+> at runtime.
 
 ## Comparing Runs
 

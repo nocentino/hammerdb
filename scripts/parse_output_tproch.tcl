@@ -155,6 +155,23 @@ if {$report_json eq "true"} {
     } else {
         puts "JSON REPORT: $reportfile"
     }
+
+    # HammerDB's own richer report via "jobs <jobid> save". The 6.0 binary ships
+    # broken; hammerdb6_compat.tcl restores the helpers it needs and becomes a
+    # no-op once a release includes them.
+    set compat [file join [file dirname [info script]] hammerdb6_compat.tcl]
+    if {![file exists $compat]} {
+        set compat /opt/HammerDB-6.0/scripts/hammerdb6_compat.tcl
+    }
+    if {[catch {source $compat} msg]} {
+        puts "WARNING: could not load the HammerDB 6.0 compat shim: $msg"
+    } elseif {!$::hammerdb6_jobs_save_usable} {
+        puts "WARNING: this HammerDB build cannot write a native job report"
+    } elseif {[catch {jobs $jobid save} msg]} {
+        puts "WARNING: could not write the native job report: $msg"
+    } else {
+        puts "NATIVE REPORT: $tmpdir/hdb_${jobid}.json"
+    }
 }
 
 # HTML charts, rendered by HammerDB and returned as a string

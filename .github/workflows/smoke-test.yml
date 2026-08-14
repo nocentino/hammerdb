@@ -81,6 +81,8 @@ jobs:
           docker compose run --rm --no-TTY -e RUN_MODE=parse -e BENCHMARK=tprocc hammerdb 2>&1 | tee parse.log
           grep -q "HAMMERDB RESULT" parse.log
           grep -q "JSON REPORT:" parse.log
+          # HammerDB's own report, which needs the 6.0 compat shim to work
+          grep -q "NATIVE REPORT:" parse.log
           if grep -q "WARNING:" parse.log; then
             echo "::error::Parse phase emitted warnings"
             grep "WARNING:" parse.log
@@ -91,8 +93,12 @@ jobs:
         run: |
           shopt -s nullglob
           reports=(output/tprocc_*.json)
+          native=(output/hdb_*.json)
           charts=(output/tprocc_*_*.html)
           if [ ${#reports[@]} -eq 0 ]; then echo "no JSON report written"; exit 1; fi
+          if [ ${#native[@]} -eq 0 ]; then echo "no native report written"; exit 1; fi
+          # The broken 6.0 jobs save leaves a zero byte file, so check size
+          if [ ! -s "${native[0]}" ]; then echo "native report is empty"; exit 1; fi
           if [ ${#charts[@]} -ne 3 ]; then echo "expected 3 charts, got ${#charts[@]}"; exit 1; fi
           python3 -c "
           import json, sys
@@ -126,6 +132,7 @@ jobs:
           name: benchmark-output
           path: |
             output/tprocc_*.json
+            output/hdb_*.json
             output/tprocc_*.html
             *.log
           if-no-files-found: warn
