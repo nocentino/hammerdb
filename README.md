@@ -2,6 +2,8 @@
 
 This repository contains automated HammerDB benchmark scripts for running TPC-C (TPROC-C) and TPC-H (TPROC-H) workloads against Microsoft SQL Server using Docker containers.
 
+[![Smoke Test](https://github.com/nocentino/hammerdb/actions/workflows/smoke-test.yml/badge.svg)](https://github.com/nocentino/hammerdb/actions/workflows/smoke-test.yml)
+
 Full blog post here: [https://www.nocentino.com/posts/2025-09-06-hammerdb-containers/](https://www.nocentino.com/posts/2025-09-06-hammerdb-containers/)
 
 Currently built and tested against **HammerDB 6.0** and **SQL Server 2025 CU8**.
@@ -20,6 +22,9 @@ All configuration is managed through environment variables, making it easy to ad
 
 - Docker and Docker Compose installed
 - Sufficient disk space for SQL Server containers and test databases
+- `sqlcmd` on your PATH, used by `loadtest.sh` to wait for the local SQL Server
+  container. Not needed when running the phases through Docker Compose yourself,
+  or when targeting a remote server.
 
 ## Project Structure
 
@@ -227,6 +232,17 @@ line — the benchmark numbers can look fine while result recording failed. See
 > **Note**: On Apple Silicon both images run under emulation (`linux/amd64`), so throughput
 > numbers from a smoke test on a Mac are not meaningful for comparison — you are only
 > checking that the plumbing works.
+
+### Continuous Integration
+
+[`.github/workflows/smoke-test.yml`](.github/workflows/smoke-test.yml) runs this same
+smoke test on every push and pull request, against a real SQL Server 2025 CU8. GitHub's
+Linux runners are x86_64, so it runs natively rather than under emulation.
+
+It builds the image, checks the HammerDB layout, then runs build, load, parse, and a
+profile comparison, failing if any virtual user reports `FINISHED FAILED`, if the parse
+phase emits a warning, or if the JSON report and charts are not produced. The reports
+and charts are uploaded as a build artifact.
 
 ## Configuration
 
@@ -635,8 +651,21 @@ Alongside the console output, the parse phase writes the following to `output/`:
 | `tprocc_<jobid>_timing.html` | Response time distribution |
 | `tprocc_<jobid>_tcount.html` | Transaction count over the run |
 
+TPC-H writes the same shape, alongside the original text report:
+
+| File | Contents |
+|---|---|
+| `tproch_<jobid>.json` | Result, query timings, and system data |
+| `tproch_<jobid>_result.html` | Query result chart |
+| `tproch_<jobid>_timing.html` | Query timing chart |
+| `mssqls_tproch_<jobid>.out` | Original plain text report, kept for compatibility |
+
 Charts are self-contained HTML and open directly in a browser. Turn either off with
 `REPORT_JSON=false` or `SAVE_CHARTS=false`.
+
+A section with no data is reported as `null` rather than as empty fields. TPC-H
+produces no xtprof timing data, so `timing` is normally `null` there, and `system`
+is `null` unless metrics were enabled.
 
 > **Note**: HammerDB 6.0 advertises a `jobs <jobid> save` command that writes an
 > AI-friendly JSON report, but the procs it depends on are missing from the shipped
@@ -668,6 +697,19 @@ docker compose run --rm --no-TTY \
 
 Set `PROFILE_ID` in each env file, or override per run with
 `docker compose run -e PROFILE_ID=2 ...`.
+
+`test.sh` wraps this up. It runs the load phase against each configuration, tags
+each with its own profile id, and runs the comparison:
+
+```bash
+./test.sh hammerdb-2022.env hammerdb-2025.env
+
+# Compare a curve rather than a single point by running several VU counts
+VU_COUNTS="4 8 16 32" ./test.sh hammerdb-2022.env hammerdb-2025.env
+```
+
+The schema must already exist on both instances. `test.sh` only runs load, compare,
+and the reporting — it does not build.
 
 The comparison prints each profile's runs and a summary, and writes
 `output/tprocc_profile_<base>_vs_<comp>.json` plus an HTML comparison chart:
