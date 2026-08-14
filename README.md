@@ -50,32 +50,76 @@ intermediate CSVs from schema builds. It is gitignored and safe to delete betwee
 runs — everything in it is regenerated, though deleting `hammer.DB` also discards
 the history of previous benchmark jobs.
 
-## Getting Started: The 5-Minute Setup
+## Quick Start
+
+Everything below runs in about five minutes on a laptop and needs nothing installed
+except Docker.
+
+**1. Clone and configure**
 
 ```bash
-# Clone the repository
 git clone https://github.com/nocentino/hammerdb.git
 cd hammerdb
-
-# Configure for your environment
 cp hammerdb.env.example hammerdb.env
+```
 
-# Run everything, build, load, and parse. 
+The example file is deliberately tiny — one warehouse, one virtual user, a one
+minute test. It is meant to prove the plumbing works, not to produce a real number.
+
+**2. Run the whole thing**
+
+```bash
 ./loadtest.sh
 ```
 
-`loadtest.sh` starts a SQL Server 2025 container, runs the TPC-C build, load, and
-parse phases against it, then tears the container down. It does not run TPC-H — use
-the `BENCHMARK=tproch` commands below for that.
+This starts a SQL Server 2025 container on port 4001, builds the TPC-C schema, runs
+the timed test, parses the results, and tears the container down. TPC-H is not part
+of this script — see [Run HammerDB Tests with Docker Compose](#run-hammerdb-tests-with-docker-compose).
 
-## Configure your test parameters
+**3. Read the results**
 
-Once you have the environment up and running, now its time to customize it for your environment.  Edit `hammerdb.env` to match your requirements. See [Configuration](#configuration) section for details.
+The run ends with your headline number:
+
+```
+TEST RESULT : System achieved 26018 NOPM from 60408 SQL Server TPM
+```
+
+and leaves these in `output/`:
+
+| File | What it is |
+|---|---|
+| `tprocc_<jobid>.json` | Result, transaction counts, response time percentiles, system data |
+| `tprocc_<jobid>_result.html` | NOPM/TPM chart — open it in a browser |
+| `tprocc_<jobid>_timing.html` | Response time distribution |
+| `tprocc_<jobid>_tcount.html` | Transactions over the run |
+
+**4. Point it at a real server**
+
+Edit `hammerdb.env` and change `SQL_SERVER_HOST` to any SQL Server on your network,
+then size the workload to the hardware using one of the
+[recommended configurations](#recommended-configuration-for-different-system-sizes).
+Skip the container step in `loadtest.sh` and drive the phases directly:
+
+```bash
+RUN_MODE=build BENCHMARK=tprocc docker compose up   # once per schema size
+RUN_MODE=load  BENCHMARK=tprocc docker compose up   # repeat as you tune
+docker compose run --rm --no-TTY -e RUN_MODE=parse -e BENCHMARK=tprocc hammerdb
+```
+
+Building the schema is a one time cost per `WAREHOUSES` value — once it exists, loop
+on load and parse while you tune.
+
+**Where to go next**
+
+- [Comparing Runs](#comparing-runs) — tag runs with `PROFILE_ID` and diff two configurations
+- [CPU and I/O Metrics](#cpu-and-io-metrics) — capture CPU, I/O, and storage detail alongside the result
+- [Configuration](#configuration) — every environment variable
+- [Upgrading from HammerDB 5.0](#upgrading-from-hammerdb-50) — read this first if you have an existing `output/hammer.DB`
 
 
 ## Running Individual Components
 
-This environment consists of two main components: a 2025 test container, and a containerized HammerDB implementation. For a quick start, you can launch the SQL Server 2025 container and run the tests shown below. After familiarizing yourself with the test environment, you can modify `hammerdb.env` to target any SQL Server instance on your network by changing the `SQL_SERVER_HOST` environment variable and execute load tests against production or staging systems. Be sure to adjust the configuration parameters as documented in the [Configuration](#configuration) section below.
+This environment consists of two main components: a 2025 test container, and a containerized HammerDB implementation. The commands below drive each phase individually, which is what you want once you are past the [Quick Start](#quick-start) and are iterating on a configuration. You can modify `hammerdb.env` to target any SQL Server instance on your network by changing the `SQL_SERVER_HOST` environment variable and execute load tests against production or staging systems. Be sure to adjust the configuration parameters as documented in the [Configuration](#configuration) section below.
 
 ### Start SQL Server Container
 
@@ -254,13 +298,13 @@ All configuration is managed through the `hammerdb.env` file. Below are the expo
 
 ## Recommended Configuration for Different System Sizes
 
-Each configuration below sizes the workload for different hardware specifications.
+Each configuration below is a complete `hammerdb.env` file tailored for different
+hardware specifications. Copy one in full and adjust from there.
 
-These blocks cover connection and workload settings only. The HammerDB 6.0
-reporting, metrics, and profile comparison settings are omitted for brevity and
-fall back to their defaults — JSON reports and charts on, metrics off, runs
-untagged. Add them from [hammerdb.env.example](hammerdb.env.example) if you want
-to tag runs with `PROFILE_ID` for [Comparing Runs](#comparing-runs) or enable
+Each includes the HammerDB 6.0 reporting and metrics settings. To compare two
+configurations, give each env file a different `PROFILE_ID` — see
+[Comparing Runs](#comparing-runs). To capture CPU, I/O, and storage detail, set
+`METRICS_ENABLED=true` and start the agent — see
 [CPU and I/O Metrics](#cpu-and-io-metrics).
 
 
@@ -301,6 +345,22 @@ TPROCC_LOG_TO_TEMP=0
 TPROCC_USE_TRANSACTION_COUNTER=true
 TPROCC_CHECKPOINT=false
 TPROCC_TIMEPROFILE=true
+
+# Reporting (HammerDB 6.0)
+PROFILE_ID=0                    # Tag runs to compare them later, 0 = untagged
+TPROCC_XT_RESERVOIR=10000       # Reservoir behind the xtprof percentiles
+REPORT_JSON=true                # Write output/tprocc_<jobid>.json
+SAVE_CHARTS=true                # Write output/tprocc_<jobid>_*.html
+
+# CPU/IO metrics (HammerDB 6.0), needs the agent on the database host
+METRICS_ENABLED=false
+METRICS_AGENT_HOSTNAME=localhost
+METRICS_AGENT_ID=10000
+
+# Profile comparison, used by RUN_MODE=compare
+BASE_PROFILE_ID=1
+COMP_PROFILE_ID=2
+WEIGHTED_COMPARE=false
 
 # TPROC-H Configuration
 TPROCH_DATABASE_NAME=tpch
@@ -354,6 +414,22 @@ TPROCC_USE_TRANSACTION_COUNTER=true
 TPROCC_CHECKPOINT=false
 TPROCC_TIMEPROFILE=true
 
+# Reporting (HammerDB 6.0)
+PROFILE_ID=0                    # Tag runs to compare them later, 0 = untagged
+TPROCC_XT_RESERVOIR=10000       # Reservoir behind the xtprof percentiles
+REPORT_JSON=true                # Write output/tprocc_<jobid>.json
+SAVE_CHARTS=true                # Write output/tprocc_<jobid>_*.html
+
+# CPU/IO metrics (HammerDB 6.0), needs the agent on the database host
+METRICS_ENABLED=false
+METRICS_AGENT_HOSTNAME=localhost
+METRICS_AGENT_ID=10000
+
+# Profile comparison, used by RUN_MODE=compare
+BASE_PROFILE_ID=1
+COMP_PROFILE_ID=2
+WEIGHTED_COMPARE=false
+
 # TPROC-H Configuration
 TPROCH_DATABASE_NAME=tpch
 TPROCH_DRIVER=mssqls
@@ -406,6 +482,22 @@ TPROCC_USE_TRANSACTION_COUNTER=true
 TPROCC_CHECKPOINT=false
 TPROCC_TIMEPROFILE=true
 
+# Reporting (HammerDB 6.0)
+PROFILE_ID=0                    # Tag runs to compare them later, 0 = untagged
+TPROCC_XT_RESERVOIR=10000       # Reservoir behind the xtprof percentiles
+REPORT_JSON=true                # Write output/tprocc_<jobid>.json
+SAVE_CHARTS=true                # Write output/tprocc_<jobid>_*.html
+
+# CPU/IO metrics (HammerDB 6.0), needs the agent on the database host
+METRICS_ENABLED=false
+METRICS_AGENT_HOSTNAME=localhost
+METRICS_AGENT_ID=10000
+
+# Profile comparison, used by RUN_MODE=compare
+BASE_PROFILE_ID=1
+COMP_PROFILE_ID=2
+WEIGHTED_COMPARE=false
+
 # TPROC-H Configuration
 TPROCH_DATABASE_NAME=tpch
 TPROCH_DRIVER=mssqls
@@ -457,6 +549,22 @@ TPROCC_LOG_TO_TEMP=0
 TPROCC_USE_TRANSACTION_COUNTER=true
 TPROCC_CHECKPOINT=false
 TPROCC_TIMEPROFILE=true
+
+# Reporting (HammerDB 6.0)
+PROFILE_ID=0                    # Tag runs to compare them later, 0 = untagged
+TPROCC_XT_RESERVOIR=10000       # Reservoir behind the xtprof percentiles
+REPORT_JSON=true                # Write output/tprocc_<jobid>.json
+SAVE_CHARTS=true                # Write output/tprocc_<jobid>_*.html
+
+# CPU/IO metrics (HammerDB 6.0), needs the agent on the database host
+METRICS_ENABLED=false
+METRICS_AGENT_HOSTNAME=localhost
+METRICS_AGENT_ID=10000
+
+# Profile comparison, used by RUN_MODE=compare
+BASE_PROFILE_ID=1
+COMP_PROFILE_ID=2
+WEIGHTED_COMPARE=false
 
 # TPROC-H Configuration
 TPROCH_DATABASE_NAME=tpch
