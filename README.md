@@ -8,6 +8,40 @@ Full blog post here: [https://www.nocentino.com/posts/2025-09-06-hammerdb-contai
 
 Currently built and tested against **HammerDB 6.0** and **SQL Server 2025 CU8**.
 
+## What's New
+
+**HammerDB 6.0 update**
+
+- **JSON reports and charts for every run.** The parse phase writes HammerDB's own
+  report plus a compact one, and self-contained HTML charts, instead of only
+  printing to the console. See [JSON Reports and Charts](#json-reports-and-charts).
+- **Compare two configurations directly.** Tag runs with `PROFILE_ID` and diff them
+  with `RUN_MODE=compare`, or use `./test.sh` to run both across a range of virtual
+  user counts. See [Comparing Runs](#comparing-runs).
+- **CPU, I/O, and storage detail.** `METRICS_ENABLED=true` records the database
+  host's hardware and software alongside the result. See
+  [CPU and I/O Metrics](#cpu-and-io-metrics).
+- **Richer response times.** The xtprof profiler now reports p99/p95/p75/p50/p25 per
+  stored procedure, not just min, average, and max.
+- **TPC-H gets the same reporting** as TPC-C, alongside its original text report.
+- **CI on every push and pull request.** A [smoke test](#continuous-integration)
+  builds the image and runs build, load, parse, and a comparison against a real
+  SQL Server.
+
+**If you are upgrading from HammerDB 5.0**, read
+[Upgrading from HammerDB 5.0](#upgrading-from-hammerdb-50) first. An existing
+`output/hammer.DB` will make runs fail *after* printing a plausible result.
+
+**Fixed along the way**
+
+- `loadtest.sh` reads its credentials and port from the env file rather than
+  duplicating them, and only manages a local container when `SQL_SERVER_HOST`
+  points at localhost.
+- `jobs <jobid> save` is broken in the shipped HammerDB 6.0 binary;
+  [scripts/hammerdb6_compat.tcl](scripts/hammerdb6_compat.tcl) restores it.
+- The README documented `TMPDIR` while the scripts read `TMP`, and `docker compose`
+  failed on a fresh clone without a local `.env`.
+
 ## Overview
 
 The scripts provide a streamlined way to:
